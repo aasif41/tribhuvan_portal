@@ -1,3 +1,14 @@
+// Polyfill DOMException for React Native / Hermes runtime compatibility
+if (typeof globalThis.DOMException === 'undefined') {
+  class DOMExceptionPolyfill extends Error {
+    constructor(message?: string, name?: string) {
+      super(message);
+      this.name = name || 'DOMException';
+    }
+  }
+  (globalThis as any).DOMException = DOMExceptionPolyfill;
+}
+
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
