@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: tribhuvan-server
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build:shared && npx prisma generate --schema=server/prisma/schema.prisma && npm run build --workspace=server
+    startCommand: npm run start --workspace=server
+    envVars:
+      - key: NODE_ENV
+        value: production
