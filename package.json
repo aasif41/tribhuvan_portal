@@ -24,6 +24,9 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
+    "@babel/plugin-transform-class-properties": "^8.0.1",
+    "@babel/plugin-transform-private-methods": "^8.0.1",
+    "@babel/plugin-transform-private-property-in-object": "^8.0.1",
     "ajv": "^8.20.0",
     "babel-preset-expo": "^57.0.6",
     "concurrently": "^8.2.2",
