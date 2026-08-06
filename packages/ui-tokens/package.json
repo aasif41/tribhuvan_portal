@@ -1,0 +1,7 @@
+{
+  "name": "@tribhuvan/ui-tokens",
+  "version": "1.0.0",
+  "private": true,
+  "main": "colors.ts",
+  "types": "colors.ts"
+}

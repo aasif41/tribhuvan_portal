@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Tribhuvan College",
+    "slug": "tribhuvan-college",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "tribhuvan",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#0d1f3c"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ac.in.tribhuvancollege.portal"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0d1f3c"
+      },
+      "package": "ac.in.tribhuvancollege.portal"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

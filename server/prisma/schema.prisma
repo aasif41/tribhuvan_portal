@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+}
+
+model User {
+  id           String         @id @default(cuid())
+  firebaseUid  String?        @unique
+  email        String         @unique
+  password     String         @default("")
+  name         String
+  role         Role
+  status       ApprovalStatus @default(PENDING)
+  profilePhoto String?
+  phone        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  student      Student?
+  teacher      Teacher?
+}
+
+model Student {
+  id               String       @id @default(cuid())
+  userId           String       @unique
+  user             User         @relation(fields: [userId], references: [id])
+  rollNo           String       @unique
+  enrollmentNumber String       @unique
+  program          String
+  year             Int
+  semester         Int
+  section          String?
+  dateOfBirth      DateTime?
+  hostel           String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  attendance       Attendance[]
+  enrollments      Enrollment[]
+}
+
+model Teacher {
+  id          String          @id @default(cuid())
+  userId      String          @unique
+  user        User            @relation(fields: [userId], references: [id])
+  employeeId  String          @unique
+  department  String
+  designation String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  subjects    Subject[]
+  timetable   TimetableSlot[]
+  attendance  Attendance[]
+}
+
+model Subject {
+  id          String          @id @default(cuid())
+  code        String          @unique
+  name        String
+  program     String
+  semester    Int
+  credits     Int
+  teacherId   String?
+  teacher     Teacher?        @relation(fields: [teacherId], references: [id])
+  timetable   TimetableSlot[]
+  attendance  Attendance[]
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id        String  @id @default(cuid())
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+
+  @@unique([studentId, subjectId])
+}
+
+model TimetableSlot {
+  id        String  @id @default(cuid())
+  day       String
+  startTime String
+  endTime   String
+  room      String
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  teacherId String?
+  teacher   Teacher? @relation(fields: [teacherId], references: [id])
+  program   String
+  semester  Int
+  section   String?
+}
+
+model Attendance {
+  id        String           @id @default(cuid())
+  date      DateTime
+  status    AttendanceStatus
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id])
+  subjectId String
+  subject   Subject          @relation(fields: [subjectId], references: [id])
+  markedBy  String
+  teacher   Teacher          @relation(fields: [markedBy], references: [id])
+  createdAt DateTime         @default(now())
+
+  @@unique([date, studentId, subjectId])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  category  String
+  postedBy  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   // Stores JSON serialized configuration
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Program {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  name       String
+  university String   @default("Nalanda University")
+  duration   Int      @default(3)
+  semesters  Int      @default(6)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  category    String   @default("SYSTEM")
+  performedBy String
+  role        String   @default("ADMIN")
+  details     String
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+}
+
+
