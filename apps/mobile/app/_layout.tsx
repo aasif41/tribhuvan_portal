@@ -25,11 +25,11 @@ function RootLayoutNav() {
     const inAuthGroup = segments[0] === '(auth)';
 
     if (!user && !inAuthGroup) {
-      router.replace('/(auth)/login');
+      router.replace('/(auth)/login' as any);
     } else if (user) {
       if (user.status === 'PENDING') {
         if (segments[1] !== 'pending') {
-          router.replace('/(auth)/pending');
+          router.replace('/(auth)/pending' as any);
         }
       } else if (user.status === 'APPROVED') {
         if (inAuthGroup) {
@@ -38,7 +38,7 @@ function RootLayoutNav() {
             TEACHER: '/(teacher)',
             ADMIN: '/(admin)',
           };
-          router.replace(roleRoutes[user.role] || '/(auth)/login');
+          router.replace((roleRoutes[user.role] || '/(auth)/login') as any);
         }
       }
     }

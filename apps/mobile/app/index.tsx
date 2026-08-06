@@ -14,9 +14,9 @@ export default function Index() {
     );
   }
 
-  if (!user) return <Redirect href="/(auth)/login" />;
-  if (user.status === 'PENDING') return <Redirect href="/(auth)/pending" />;
+  if (!user) return <Redirect href={"/(auth)/login" as any} />;
+  if (user.status === 'PENDING') return <Redirect href={"/(auth)/pending" as any} />;
 
   const routes: Record<string, string> = { STUDENT: '/(student)', TEACHER: '/(teacher)', ADMIN: '/(admin)' };
-  return <Redirect href={routes[user.role] || '/(auth)/login'} />;
+  return <Redirect href={(routes[user.role] || '/(auth)/login') as any} />;
 }
