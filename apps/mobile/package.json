@@ -22,8 +22,7 @@
     "react-native-screens": "~3.31.1",
     "@react-navigation/bottom-tabs": "^6.5.20",
     "axios": "^1.7.2",
-    "@react-native-firebase/app": "^20.1.0",
-    "@react-native-firebase/auth": "^20.1.0"
+    "expo-secure-store": "~13.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.24.5",

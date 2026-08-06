@@ -17,7 +17,9 @@ function RootLayoutNav() {
       router.replace('/(auth)/login');
     } else if (user) {
       if (user.status === 'PENDING') {
-        router.replace('/(auth)/pending');
+        if (segments[1] !== 'pending') {
+          router.replace('/(auth)/pending');
+        }
       } else if (user.status === 'APPROVED') {
         if (inAuthGroup) {
           const roleRoutes: Record<string, string> = {
@@ -33,7 +35,7 @@ function RootLayoutNav() {
 
   return (
     <>
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
       <Slot />
     </>
   );
