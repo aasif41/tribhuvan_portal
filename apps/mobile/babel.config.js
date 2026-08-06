@@ -3,8 +3,8 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     assumptions: {
-      privateFieldsAsProperties: true,
       setPublicClassFields: true,
+      privateFieldsAsSymbols: true,
     },
     plugins: [
       '@babel/plugin-transform-private-methods',
