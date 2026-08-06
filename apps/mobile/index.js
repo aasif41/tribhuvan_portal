@@ -8,7 +8,7 @@ if (typeof globalThis.DOMException === 'undefined') {
   }
   globalThis.DOMException = DOMExceptionPolyfill;
   if (typeof global !== 'undefined') {
-    (global as any).DOMException = DOMExceptionPolyfill;
+    global.DOMException = DOMExceptionPolyfill;
   }
 }
 
