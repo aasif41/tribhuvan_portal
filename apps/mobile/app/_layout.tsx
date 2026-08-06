@@ -28,7 +28,7 @@ function RootLayoutNav() {
       router.replace('/(auth)/login' as any);
     } else if (user) {
       if (user.status === 'PENDING') {
-        if (segments[1] !== 'pending') {
+        if ((segments as string[])[1] !== 'pending') {
           router.replace('/(auth)/pending' as any);
         }
       } else if (user.status === 'APPROVED') {
