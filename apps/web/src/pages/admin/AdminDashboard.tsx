@@ -3,7 +3,7 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import api from '../../services/api';
-import { GraduationCap, Users, Clock, Megaphone, Globe, LayoutDashboard, FileDown, ShieldCheck } from 'lucide-react';
+import { GraduationCap, Users, Clock, Megaphone, FileDown, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface DashboardStats { 

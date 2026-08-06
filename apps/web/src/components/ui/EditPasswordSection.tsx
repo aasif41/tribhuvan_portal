@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { KeyRound, Eye, EyeOff } from 'lucide-react';
 
 interface EditPasswordSectionProps {

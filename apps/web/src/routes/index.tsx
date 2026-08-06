@@ -44,6 +44,7 @@ export function AppRoutes() {
       {/* Default Landing & Auth routes */}
       <Route path="/" element={<UnifiedAuthPage />} />
       <Route path="/login" element={<UnifiedAuthPage />} />
+      <Route path="/about" element={<AboutCollege />} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/register" element={<Navigate to="/login" replace />} />
       <Route path="/pending" element={<Navigate to="/login" replace />} />
