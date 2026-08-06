@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = __DEV__ ? 'http://localhost:5000/api' : 'https://api.tribhuvancollege.ac.in/api';
+const API_BASE_URL = __DEV__ ? 'http://localhost:5000/api' : 'https://tribhuvan-portal.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
