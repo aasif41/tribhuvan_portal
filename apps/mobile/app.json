@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "scheme": "tribhuvan",
     "userInterfaceStyle": "automatic",
+    "jsEngine": "jsc",
     "splash": {
       "backgroundColor": "#0d1f3c"
     },
@@ -19,9 +20,18 @@
       },
       "package": "ac.in.tribhuvancollege.portal"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3474d09b-37ee-4e96-8b6b-2135c25235c3"
+      }
+    },
+    "owner": "aasif45"
   }
 }
