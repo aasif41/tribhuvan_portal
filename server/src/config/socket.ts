@@ -7,11 +7,11 @@ let io: Server;
 export function initializeSocket(httpServer: HttpServer): Server {
   io = new Server(httpServer, {
     cors: {
-      origin: isOriginAllowed,
+      origin: isOriginAllowed as any,
       methods: ['GET', 'POST'],
       credentials: true,
     },
-  });
+  } as any);
 
   io.on('connection', (socket: Socket) => {
     console.log(`🔌 Socket connected: ${socket.id}`);
