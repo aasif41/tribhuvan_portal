@@ -51,6 +51,9 @@
     "@tribhuvan/web": {
       "@types/react": "^18.3.31",
       "@types/react-dom": "^18.3.7"
+    },
+    "@tribhuvan/mobile": {
+      "react": "19.1.0"
     }
   },
   "optionalDependencies": {
