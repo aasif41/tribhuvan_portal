@@ -40,7 +40,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(loggerMiddleware);
 
 // Health check
-app.get('/api/health', (_req, res) => {
+app.get(['/api/health', '/health'], (_req, res) => {
   res.json({
     success: true,
     message: 'Tribhuvan Portal API is running',
@@ -49,17 +49,22 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// API Routes
-app.use('/api/auth', authRouter);
-app.use('/api/users', usersRouter);
-app.use('/api/students', studentsRouter);
-app.use('/api/teachers', teachersRouter);
-app.use('/api/attendance', attendanceRouter);
-app.use('/api/timetable', timetableRouter);
-app.use('/api/announcements', announcementsRouter);
-app.use('/api/subjects', subjectsRouter);
-app.use('/api/programs', programsRouter);
-app.use('/api/audit', auditRouter);
+// API Routes (mounted under both /api and root / for client compatibility)
+const registerRoutes = (prefix: string) => {
+  app.use(`${prefix}/auth`, authRouter);
+  app.use(`${prefix}/users`, usersRouter);
+  app.use(`${prefix}/students`, studentsRouter);
+  app.use(`${prefix}/teachers`, teachersRouter);
+  app.use(`${prefix}/attendance`, attendanceRouter);
+  app.use(`${prefix}/timetable`, timetableRouter);
+  app.use(`${prefix}/announcements`, announcementsRouter);
+  app.use(`${prefix}/subjects`, subjectsRouter);
+  app.use(`${prefix}/programs`, programsRouter);
+  app.use(`${prefix}/audit`, auditRouter);
+};
+
+registerRoutes('/api');
+registerRoutes('');
 
 // 404 handler
 app.use((_req, res) => {
