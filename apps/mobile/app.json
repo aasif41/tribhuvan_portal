@@ -15,6 +15,7 @@
       "bundleIdentifier": "ac.in.tribhuvancollege.portal"
     },
     "android": {
+      "jsEngine": "jsc",
       "adaptiveIcon": {
         "backgroundColor": "#0d1f3c"
       },
