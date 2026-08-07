@@ -25,13 +25,12 @@ const httpServer = createServer(app);
 // Initialize Socket.io
 initializeSocket(httpServer);
 
+import { isOriginAllowed } from './config/cors';
+
 // Global Middleware
 app.use(
   cors({
-    origin:
-      env.NODE_ENV === 'production'
-        ? 'https://tribhuvancollege.ac.in'
-        : ['http://localhost:5173', 'http://localhost:3000'],
+    origin: isOriginAllowed,
     credentials: true,
   })
 );

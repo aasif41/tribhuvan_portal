@@ -1,14 +1,13 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
+import { isOriginAllowed } from './cors';
 
 let io: Server;
 
 export function initializeSocket(httpServer: HttpServer): Server {
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.NODE_ENV === 'production'
-        ? 'https://tribhuvancollege.ac.in'
-        : ['http://localhost:5173', 'http://localhost:3000'],
+      origin: isOriginAllowed,
       methods: ['GET', 'POST'],
       credentials: true,
     },

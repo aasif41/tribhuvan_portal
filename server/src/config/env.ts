@@ -22,6 +22,8 @@ const envSchema = z.object({
 
   ADMIN_EMAIL: z.string().email().default('admin@tribhuvancollege.ac.in'),
   COLLEGE_DOMAIN: z.string().default('tribhuvancollege.ac.in'),
+  CLIENT_URL: z.string().optional(),
+  ALLOWED_ORIGINS: z.string().optional(),
 });
 
 function validateEnv(): z.infer<typeof envSchema> {
