@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Card, CardHeader } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { ChevronLeft, ChevronRight, Users, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Users, ChevronDown, ChevronUp, MapPin, Coffee } from 'lucide-react';
 import api from '../../services/api';
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -120,8 +120,8 @@ export function MyClasses() {
       {sortedSemesters.length === 0 ? (
         <Card>
           <div className="p-12 text-center text-brand-muted">
-            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">☕</span>
+            <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-100 shadow-xs">
+              <Coffee className="w-8 h-8 text-amber-600" />
             </div>
             <p className="text-lg font-medium text-navy mb-1">No classes scheduled for {currentDayName}.</p>
             <p className="text-sm">Enjoy your free time!</p>

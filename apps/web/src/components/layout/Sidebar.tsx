@@ -41,28 +41,43 @@ const navItems: Record<string, NavItem[]> = {
   ],
 };
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const role = (user?.role || 'STUDENT') as Role;
   const items = navItems[role] || [];
 
   const handleSignOut = async () => {
+    if (onClose) onClose();
     await signOut();
     navigate('/login');
   };
 
-  return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-100 flex flex-col z-40">
+  const navContent = (
+    <div className="flex flex-col h-full bg-white">
       {/* Logo */}
-      <div className="px-6 py-5 border-b border-gray-100">
+      <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src="/college.png" alt="Logo" className="w-10 h-10 object-contain" />
+          <img src="/college.png" alt="Logo" className="w-9 h-9 object-contain" />
           <div>
             <h1 className="text-sm font-bold text-brand-text">Tribhuvan</h1>
             <p className="text-xs text-brand-muted">College Portal</p>
           </div>
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="md:hidden p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+            aria-label="Close menu"
+          >
+            <LogOut className="rotate-180" size={18} />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -72,11 +87,14 @@ export function Sidebar() {
             key={item.path}
             to={item.path}
             end={item.path === `/${role.toLowerCase()}`}
+            onClick={onClose}
             className={({ isActive }) =>
               `sidebar-link ${isActive ? 'sidebar-link-active' : ''}`
             }
           >
-            <span className="text-base text-brand-muted group-hover:text-gold transition-colors"><item.icon size={18} /></span>
+            <span className="text-base text-brand-muted group-hover:text-gold transition-colors">
+              <item.icon size={18} />
+            </span>
             <span>{item.label}</span>
           </NavLink>
         ))}
@@ -112,6 +130,30 @@ export function Sidebar() {
           <span>Sign Out</span>
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 border-r border-gray-100 flex-col z-40">
+        {navContent}
+      </aside>
+
+      {/* Mobile Drawer Backdrop & Sidebar */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-navy/60 backdrop-blur-sm transition-opacity"
+            onClick={onClose}
+          />
+          {/* Drawer Content */}
+          <div className="relative w-4/5 max-w-xs bg-white h-full shadow-2xl z-10 animate-slide-in">
+            {navContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

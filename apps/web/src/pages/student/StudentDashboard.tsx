@@ -60,7 +60,7 @@ export function StudentDashboard() {
       />
 
       {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card hover>
           <p className="text-sm text-brand-muted">Overall Attendance</p>
           <p className="text-3xl font-bold text-brand-text mt-1">{overallAttendance}%</p>

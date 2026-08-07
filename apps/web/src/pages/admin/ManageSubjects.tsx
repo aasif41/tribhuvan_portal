@@ -134,7 +134,7 @@ export function ManageSubjects() {
                     {prog}
                   </div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full text-left border-collapse min-w-[550px]">
                       <thead>
                         <tr className="bg-gray-50 text-brand-muted text-sm uppercase tracking-wider border-b border-brand-border">
                           <th className="p-4 font-semibold">Code</th>

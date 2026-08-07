@@ -51,15 +51,15 @@ export function ManageStudents() {
       </div>
 
       <Card>
-        <div className="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="mb-6 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
           <input
             type="text"
             placeholder="Search by name, email or roll number..."
-            className="input-field max-w-md"
+            className="input-field w-full max-w-md"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <div className="text-sm text-brand-muted">
+          <div className="text-xs sm:text-sm text-brand-muted shrink-0">
             Total Students: <span className="font-bold text-navy">{students.length}</span>
           </div>
         </div>
@@ -68,7 +68,7 @@ export function ManageStudents() {
           <p className="text-center p-8 text-brand-muted">Loading students...</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="bg-gray-50 text-brand-muted text-sm uppercase tracking-wider border-b border-brand-border">
                   <th className="p-4 font-semibold">Student</th>

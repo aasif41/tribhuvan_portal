@@ -94,24 +94,15 @@ export function Timetable() {
     <div className="space-y-6">
       <PageHeader title="Timetable" subtitle="Your weekly class schedule" />
 
-      <div className="full-width-table">
+      <div className="w-full overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 sm:p-4 shadow-xs">
         <style dangerouslySetInnerHTML={{__html: `
-          .full-width-table {
-              width: calc(100vw - 256px); /* Full screen width minus sidebar */
-              position: relative;
-              left: 50%;
-              transform: translateX(-50%);
-              overflow-x: auto;
-              padding: 0 24px;
-          }
-
           .custom-timetable {
               table-layout: fixed;
               border-collapse: separate;
               border-spacing: 2px;
-              border: 1px solid black;
+              border: 1px solid #e2e8f0;
               width: 100%;
-              min-width: 1300px; /* Safe minimum width */
+              min-width: 1000px;
               font-size: 0.8rem;
           }
 

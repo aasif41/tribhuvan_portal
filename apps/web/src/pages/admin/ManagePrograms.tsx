@@ -230,7 +230,7 @@ export function ManagePrograms() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[650px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100 text-[11px] font-semibold text-brand-muted uppercase tracking-wider">
                   <th className="py-3.5 px-5">Program Name</th>

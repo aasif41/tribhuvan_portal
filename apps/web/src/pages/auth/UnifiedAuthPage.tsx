@@ -140,17 +140,36 @@ export function UnifiedAuthPage() {
   const submitBtnBase = 'w-full py-3 rounded-lg text-[13px] font-semibold tracking-[0.06em] uppercase transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2';
 
   return (
-    <div className="relative w-full min-h-screen overflow-hidden font-sans" style={{ background: '#e8e2d6' }}>
+    <div className="relative w-full min-h-screen font-sans bg-[#f0ece4] overflow-x-hidden lg:overflow-hidden flex flex-col lg:block">
+
+      {/* Mobile Top Brand Header */}
+      <div className="lg:hidden bg-navy text-white px-5 py-4 flex items-center justify-between shadow-md z-30">
+        <div className="flex items-center gap-3">
+          <img src="/college.png" alt={COLLEGE.name} className="w-8 h-8 object-contain" />
+          <div>
+            <h1 className="text-sm font-bold leading-tight">{COLLEGE.name}</h1>
+            <p className="text-[10px] text-[#c8922a] uppercase tracking-wider">College Portal</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={handleToggleAdmin}
+          className="text-xs font-semibold px-3 py-1.5 rounded bg-[#c8922a]/20 text-[#c8922a] border border-[#c8922a]/40 hover:bg-[#c8922a]/30 transition-colors"
+        >
+          {isAdminMode ? 'Student/Teacher' : 'Admin Login'}
+        </button>
+      </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* PANEL 1: ADMIN LOGIN FORM (cream background, left side)              */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       <div
-        className="absolute inset-y-0 w-full lg:w-[58%] flex flex-col z-0"
+        className={`${
+          isAdminMode ? 'flex' : 'hidden lg:flex'
+        } lg:absolute lg:inset-y-0 w-full lg:w-[58%] flex-col z-10 lg:z-0 min-h-screen lg:min-h-0 bg-[#f0ece4] transition-all duration-700`}
         style={{
           left: '0%',
-          background: '#f0ece4',
-          transition: `all 800ms ${customCubicBezier}`,
+          transitionTimingFunction: customCubicBezier,
         }}
       >
         {/* Top accent stripe */}
@@ -160,10 +179,10 @@ export function UnifiedAuthPage() {
           <div className="flex-1" style={{ background: '#0d1f3c' }} />
         </div>
 
-        <div className="flex-1 flex items-center justify-center px-5 sm:px-8 lg:px-14 py-10 overflow-y-auto">
+        <div className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-14 py-8 sm:py-10 overflow-y-auto">
           <div
             className={`w-full max-w-md transition-all duration-700 ${
-              isAdminMode ? 'opacity-100 scale-100 translate-x-0 delay-200' : 'opacity-0 scale-[0.96] -translate-x-6 pointer-events-none'
+              isAdminMode ? 'opacity-100 scale-100 translate-x-0' : 'opacity-0 scale-[0.96] -translate-x-6 pointer-events-none'
             }`}
             style={{ transitionTimingFunction: customCubicBezier }}
           >
@@ -266,11 +285,11 @@ export function UnifiedAuthPage() {
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* PANEL 2: SLIDING BLUE IDENTITY PANEL (Floats over background)          */}
+      {/* PANEL 2: SLIDING BLUE IDENTITY PANEL (Floats over background on Desktop)*/}
       {/* Normal: left:0%  |  Admin: left:58%                                  */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       <div
-        className="absolute inset-y-0 w-full lg:w-[42%] flex flex-col overflow-hidden z-20"
+        className="hidden lg:flex absolute inset-y-0 w-[42%] flex-col overflow-hidden z-20"
         style={{
           left: isAdminMode ? '58%' : '0%',
           background: 'linear-gradient(170deg, #0d1f3c 0%, #142d54 50%, #0d1f3c 100%)',
@@ -355,11 +374,12 @@ export function UnifiedAuthPage() {
       {/* PANEL 3: STUDENT / TEACHER FORM (cream background, right side)         */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       <div
-        className="absolute inset-y-0 w-full lg:w-[58%] flex flex-col z-0"
+        className={`${
+          !isAdminMode ? 'flex' : 'hidden lg:flex'
+        } lg:absolute lg:inset-y-0 w-full lg:w-[58%] flex-col z-10 lg:z-0 min-h-screen lg:min-h-0 bg-[#f0ece4] transition-all duration-700`}
         style={{
           left: '42%',
-          background: '#f0ece4',
-          transition: `all 800ms ${customCubicBezier}`,
+          transitionTimingFunction: customCubicBezier,
         }}
       >
         {/* Top accent stripe */}

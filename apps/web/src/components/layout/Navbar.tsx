@@ -1,16 +1,29 @@
 import { useAuth } from '../../hooks/useAuth';
-import { Hand } from 'lucide-react';
+import { Hand, Menu } from 'lucide-react';
 
-export function Navbar() {
+interface NavbarProps {
+  onOpenMobileSidebar?: () => void;
+}
+
+export function Navbar({ onOpenMobileSidebar }: NavbarProps) {
   const { user } = useAuth();
 
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-gray-100">
-      <div className="flex items-center justify-between px-6 py-3">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3">
+        <div className="flex items-center gap-3">
+          {onOpenMobileSidebar && (
+            <button
+              onClick={onOpenMobileSidebar}
+              className="md:hidden p-2 text-brand-text hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Open sidebar"
+            >
+              <Menu size={20} />
+            </button>
+          )}
           <img src="/college.png" alt="Logo" className="w-8 h-8 object-contain md:hidden" />
-          <h2 className="text-lg font-semibold text-brand-text">
-            Welcome back, {user?.name?.split(' ')[0] || 'User'} <Hand size={20} className="inline-block mb-1 text-gold ml-1 animate-bounce" />
+          <h2 className="text-sm sm:text-lg font-semibold text-brand-text truncate">
+            Welcome back, {user?.name?.split(' ')[0] || 'User'} <Hand size={18} className="inline-block mb-1 text-gold ml-1 animate-bounce" />
           </h2>
         </div>
 
