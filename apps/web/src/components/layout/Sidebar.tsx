@@ -3,7 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import type { Role } from '@tribhuvan/shared';
 import { 
   LayoutDashboard, Calendar, ClipboardCheck, Megaphone, User, 
-  BookOpen, Clock, GraduationCap, Users, Book, LogOut, ShieldCheck
+  BookOpen, Clock, GraduationCap, Users, Book, LogOut, ShieldCheck, X
 } from 'lucide-react';
 
 interface NavItem {
@@ -59,7 +59,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   };
 
   const navContent = (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white select-none">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -72,10 +72,10 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         {onClose && (
           <button
             onClick={onClose}
-            className="md:hidden p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+            className="md:hidden p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
             aria-label="Close menu"
           >
-            <LogOut className="rotate-180" size={18} />
+            <X size={18} />
           </button>
         )}
       </div>
@@ -100,34 +100,36 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         ))}
       </nav>
 
-      {/* User section */}
-      <div className="px-4 py-4 border-t border-gray-100">
-        <div className="flex items-center gap-3 mb-3">
+      {/* User & Redesigned Sign Out section */}
+      <div className="p-4 border-t border-slate-100 bg-slate-50/50 space-y-3">
+        <div className="flex items-center gap-3">
           {user?.profilePhoto ? (
             <img
               src={user.profilePhoto}
               alt={user.name}
               referrerPolicy="no-referrer"
-              className="w-9 h-9 rounded-full object-cover"
+              className="w-9 h-9 rounded-full object-cover ring-2 ring-gold/30"
             />
           ) : (
-            <div className="w-9 h-9 bg-gold/10 rounded-full flex items-center justify-center">
-              <span className="text-gold font-semibold text-sm">
-                {user?.name?.charAt(0) || '?'}
-              </span>
+            <div className="w-9 h-9 bg-navy text-gold font-bold text-sm rounded-full flex items-center justify-center shadow-xs">
+              {user?.name?.charAt(0) || '?'}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-brand-text truncate">{user?.name}</p>
-            <p className="text-xs text-brand-muted truncate">{user?.email}</p>
+            <p className="text-sm font-semibold text-brand-text truncate">{user?.name}</p>
+            <p className="text-xs text-brand-muted truncate capitalize">{user?.role?.toLowerCase()}</p>
           </div>
         </div>
+
         <button
           onClick={handleSignOut}
-          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+          className="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold tracking-wide uppercase text-slate-700 bg-white hover:bg-slate-100 hover:text-navy border border-slate-200/80 hover:border-gold/40 rounded-lg shadow-2xs transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-gold/40 cursor-pointer"
         >
-          <LogOut size={16} />
-          <span>Sign Out</span>
+          <span className="flex items-center gap-2">
+            <LogOut size={15} className="text-brand-muted group-hover:text-gold transition-colors" />
+            <span>Sign Out</span>
+          </span>
+          <span className="text-xs text-brand-muted group-hover:translate-x-0.5 transition-transform">→</span>
         </button>
       </div>
     </div>
@@ -140,20 +142,28 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         {navContent}
       </aside>
 
-      {/* Mobile Drawer Backdrop & Sidebar */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-navy/60 backdrop-blur-sm transition-opacity"
-            onClick={onClose}
-          />
-          {/* Drawer Content */}
-          <div className="relative w-4/5 max-w-xs bg-white h-full shadow-2xl z-10 animate-slide-in">
-            {navContent}
-          </div>
+      {/* Mobile Drawer Overlay & Smooth Slide-in / Slide-out Panel */}
+      <div
+        className={`fixed inset-0 z-50 md:hidden flex transition-opacity duration-300 ease-in-out motion-reduce:transition-none ${
+          isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        {/* Backdrop */}
+        <div
+          className={`fixed inset-0 bg-navy/60 backdrop-blur-xs transition-opacity duration-300 ease-in-out motion-reduce:transition-none ${
+            isOpen ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={onClose}
+        />
+        {/* Drawer Content Panel */}
+        <div
+          className={`relative w-4/5 max-w-xs bg-white h-full shadow-2xl z-10 transform transition-transform duration-300 ease-in-out motion-reduce:transition-none ${
+            isOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          {navContent}
         </div>
-      )}
+      </div>
     </>
   );
 }

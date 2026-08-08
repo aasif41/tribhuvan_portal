@@ -6,6 +6,8 @@ import { useAuth } from '../../hooks/useAuth';
 
 
 
+import { TableSkeleton } from '../../components/ui/Skeleton';
+
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 export function Timetable() {
@@ -87,7 +89,12 @@ export function Timetable() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500">Loading timetable...</div>;
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Timetable" subtitle="Your weekly class schedule" />
+        <TableSkeleton rows={6} cols={5} />
+      </div>
+    );
   }
 
   return (

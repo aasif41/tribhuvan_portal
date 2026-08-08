@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import api from '../../services/api';
 import { GraduationCap, Users, Clock, Megaphone, FileDown, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { PageSkeleton } from '../../components/ui/Skeleton';
 
 interface DashboardStats { 
   totalStudents: number; 
@@ -49,7 +50,7 @@ export function AdminDashboard() {
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-gold/30 border-t-gold rounded-full animate-spin" /></div>;
+  if (loading) return <PageSkeleton />;
 
   const statCards = [
     { label: 'Total Students', value: stats?.totalStudents || 0, icon: GraduationCap, color: 'bg-blue-50 text-blue-600' },

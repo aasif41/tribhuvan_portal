@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { PageHeader } from '../../components/layout/PageHeader';
+import { PageSkeleton } from '../../components/ui/Skeleton';
 import { Card, CardHeader } from '../../components/ui/Card';
 import api from '../../services/api';
 import { BookOpen, Clock, GraduationCap, PartyPopper } from 'lucide-react';
@@ -74,11 +75,7 @@ export function TeacherDashboard() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (

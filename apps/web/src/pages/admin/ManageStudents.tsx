@@ -4,6 +4,8 @@ import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import api from '../../services/api';
 
+import { TableSkeleton } from '../../components/ui/Skeleton';
+
 export function ManageStudents() {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -65,9 +67,9 @@ export function ManageStudents() {
         </div>
 
         {loading ? (
-          <p className="text-center p-8 text-brand-muted">Loading students...</p>
+          <TableSkeleton rows={5} cols={5} />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="w-full overflow-x-auto rounded-xl border border-gray-100 shadow-2xs">
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="bg-gray-50 text-brand-muted text-sm uppercase tracking-wider border-b border-brand-border">

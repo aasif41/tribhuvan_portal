@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Sparkles } from 'lucide-react';
 import api from '../../services/api';
+import { ListSkeleton } from '../../components/ui/Skeleton';
 
 interface PendingUser { id: string; name: string; email: string; role: string; createdAt: string; student: { rollNo: string; program: string } | null; teacher: { employeeId: string; department: string } | null; }
 
@@ -13,17 +14,30 @@ export function PendingApprovals() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/users/pending').then((r) => { setUsers(r.data.data); setLoading(false); }).catch(() => setLoading(false));
+    fetchPending();
   }, []);
+
+  const fetchPending = () => {
+    api.get('/users/pending').then((r) => { setUsers(r.data.data); setLoading(false); }).catch(() => setLoading(false));
+  };
 
   const handleAction = async (userId: string, action: 'approve' | 'reject') => {
     try {
-      await api.patch(`/users/${action}/${userId}`);
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
-    } catch (err) { console.error(err); }
+      await api.patch(`/users/${userId}/${action}`);
+      fetchPending();
+    } catch {
+      alert(`Failed to ${action} user.`);
+    }
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-gold/30 border-t-gold rounded-full animate-spin" /></div>;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Pending Approvals" subtitle="Users awaiting approval" />
+        <ListSkeleton items={4} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

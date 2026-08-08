@@ -5,6 +5,8 @@ import { Card } from '../../components/ui/Card';
 import api from '../../services/api';
 import { PROGRAM_NAMES } from '@tribhuvan/shared';
 
+import { TableSkeleton } from '../../components/ui/Skeleton';
+
 export function ManageSubjects() {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
@@ -122,7 +124,7 @@ export function ManageSubjects() {
 
       <Card>
         {loading ? (
-          <p className="text-center p-4">Loading...</p>
+          <TableSkeleton rows={5} cols={5} />
         ) : (
           <div className="space-y-8">
             {Object.keys(groupedSubjects).length === 0 ? (

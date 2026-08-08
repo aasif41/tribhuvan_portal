@@ -25,6 +25,8 @@ export interface Program {
   createdAt?: string;
 }
 
+import { TableSkeleton } from '../../components/ui/Skeleton';
+
 export function ManagePrograms() {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
@@ -220,10 +222,7 @@ export function ManagePrograms() {
       {/* Table */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-brand-muted text-xs flex flex-col items-center justify-center gap-3">
-            <div className="w-6 h-6 border-2 border-navy border-t-transparent rounded-full animate-spin" />
-            <span>Loading academic programs...</span>
-          </div>
+          <TableSkeleton rows={5} cols={5} />
         ) : filteredPrograms.length === 0 ? (
           <div className="p-12 text-center text-brand-muted text-xs">
             No academic programs found. Click "Add New Program" to create one.

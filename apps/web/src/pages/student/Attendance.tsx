@@ -6,6 +6,8 @@ import { AttendanceBar } from '../../components/shared/AttendanceBar';
 import { Badge } from '../../components/ui/Badge';
 import { Calendar, Filter, Clock, Users, BookOpen } from 'lucide-react';
 
+import { PageSkeleton } from '../../components/ui/Skeleton';
+
 export function Attendance() {
   const { attendance, loading } = useAttendance();
   const [activeTab, setActiveTab] = useState<'summary' | 'history'>('summary');
@@ -64,11 +66,7 @@ export function Attendance() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
-      </div>
-    );
+    return <PageSkeleton />;
   }
 
   return (

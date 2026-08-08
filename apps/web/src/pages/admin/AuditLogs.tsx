@@ -16,6 +16,8 @@ interface AuditLog {
   createdAt: string;
 }
 
+import { TableSkeleton } from '../../components/ui/Skeleton';
+
 export function AuditLogs() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,16 +165,14 @@ export function AuditLogs() {
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="w-7 h-7 border-3 border-gold/30 border-t-gold rounded-full animate-spin" />
-          </div>
+          <TableSkeleton rows={6} cols={5} />
         ) : filteredLogs.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
             <FileText size={32} className="mx-auto mb-2 opacity-50" />
             <p className="text-sm font-medium">No audit logs found matching your criteria</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="w-full overflow-x-auto rounded-xl border border-gray-100 shadow-2xs">
             <table className="w-full text-left text-xs">
               <thead className="bg-gray-50 text-gray-600 font-semibold border-b border-gray-100 uppercase tracking-wider text-[10px]">
                 <tr>

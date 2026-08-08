@@ -430,7 +430,9 @@ export function UnifiedAuthPage() {
               </div>
 
               <div className="p-6 sm:p-8">
-                {/* Alerts */}
+                {/* Smooth Tab Content Transition Wrapper */}
+                <div key={`${role}-${activeTab}`} className="transition-all duration-300 ease-in-out animate-fade-in motion-reduce:animate-none">
+                  {/* Alerts */}
                 {error && (
                   <div className="mb-5 p-3.5 bg-[#fdf2f2] border-l-[3px] border-[#c04040] rounded-r-lg flex items-start gap-2.5 text-[12px] text-[#7a2020]">
                     <AlertCircle size={15} className="shrink-0 mt-0.5 text-[#c04040]" /><span className="leading-relaxed">{error}</span>
@@ -541,6 +543,7 @@ export function UnifiedAuthPage() {
                     </button>
                   </form>
                 )}
+                </div>
               </div>
             </div>
 
