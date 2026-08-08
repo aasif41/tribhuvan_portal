@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import type { Role } from '@tribhuvan/shared';
@@ -52,6 +53,22 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const role = (user?.role || 'STUDENT') as Role;
   const items = navItems[role] || [];
 
+  // Lock background page scroll when mobile drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isOpen]);
+
   const handleSignOut = async () => {
     if (onClose) onClose();
     await signOut();
@@ -60,10 +77,10 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
   const navContent = (
     <div className="flex flex-col h-full bg-white select-none">
-      {/* Logo */}
-      <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+      {/* Logo & Redesigned Close Button */}
+      <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img src="/college.png" alt="Logo" className="w-9 h-9 object-contain" />
+          <img src="/college.png" alt="Logo" className="w-8 h-8 object-contain" />
           <div>
             <h1 className="text-sm font-bold text-brand-text">Tribhuvan</h1>
             <p className="text-xs text-brand-muted">College Portal</p>
@@ -72,10 +89,10 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         {onClose && (
           <button
             onClick={onClose}
-            className="md:hidden p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+            className="md:hidden w-8 h-8 flex items-center justify-center text-slate-500 hover:text-navy bg-slate-100/90 hover:bg-slate-200/80 rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold/40 cursor-pointer shrink-0"
             aria-label="Close menu"
           >
-            <X size={18} />
+            <X size={16} strokeWidth={2.2} />
           </button>
         )}
       </div>
@@ -157,7 +174,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         />
         {/* Drawer Content Panel */}
         <div
-          className={`relative w-4/5 max-w-xs bg-white h-full shadow-2xl z-10 transform transition-transform duration-300 ease-in-out motion-reduce:transition-none ${
+          className={`relative w-4/5 max-w-xs bg-white h-full shadow-2xl z-10 overscroll-contain overflow-y-auto transform transition-transform duration-300 ease-in-out motion-reduce:transition-none ${
             isOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >

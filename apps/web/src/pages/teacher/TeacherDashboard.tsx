@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { PageHeader } from '../../components/layout/PageHeader';
-import { PageSkeleton } from '../../components/ui/Skeleton';
+import { TeacherDashboardSkeleton } from '../../components/ui/Skeleton';
 import { Card, CardHeader } from '../../components/ui/Card';
 import api from '../../services/api';
 import { BookOpen, Clock, GraduationCap, PartyPopper } from 'lucide-react';
@@ -75,7 +75,7 @@ export function TeacherDashboard() {
   }, []);
 
   if (loading) {
-    return <PageSkeleton />;
+    return <TeacherDashboardSkeleton />;
   }
 
   return (

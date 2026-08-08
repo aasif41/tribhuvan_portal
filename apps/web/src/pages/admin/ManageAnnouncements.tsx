@@ -9,6 +9,8 @@ import api from '../../services/api';
 import type { Announcement } from '@tribhuvan/shared';
 import { ANNOUNCEMENT_CATEGORIES } from '@tribhuvan/shared';
 
+import { ListSkeleton } from '../../components/ui/Skeleton';
+
 export function ManageAnnouncements() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,14 @@ export function ManageAnnouncements() {
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-4 border-gold/30 border-t-gold rounded-full animate-spin" /></div>;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Manage Announcements" />
+        <ListSkeleton items={4} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -396,8 +396,8 @@ export function TimetableEditor() {
           </div>
 
           {/* Grid */}
-          <div className="flex-1 bg-white p-4 rounded-lg shadow-sm border border-gray-100 overflow-auto">
-            <table className="w-full text-sm border-collapse">
+          <div className="w-full overflow-x-auto bg-white p-2 sm:p-4 rounded-xl shadow-2xs border border-gray-100">
+            <table className="w-full text-sm border-collapse min-w-[850px]">
               <thead>
                 <tr>
                   <th className="border p-2 bg-gray-50 w-24">Day</th>

@@ -7,7 +7,7 @@ import { AnnouncementCard } from '../../components/shared/AnnouncementCard';
 import api from '../../services/api';
 import type { AttendanceSummary, Announcement, TimetableSlot } from '@tribhuvan/shared';
 
-import { PageSkeleton } from '../../components/ui/Skeleton';
+import { StudentDashboardSkeleton } from '../../components/ui/Skeleton';
 
 export function StudentDashboard() {
   const { user } = useAuth();
@@ -47,7 +47,7 @@ export function StudentDashboard() {
       : 0;
 
   if (loading) {
-    return <PageSkeleton />;
+    return <StudentDashboardSkeleton />;
   }
 
   return (
