@@ -1,2 +1,0 @@
-This is a placeholder for the app icon.
-Replace this with a 1024x1024 PNG icon for the mobile app.
