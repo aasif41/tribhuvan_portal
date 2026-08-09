@@ -140,9 +140,9 @@ export function Timetable() {
         <span className="text-xs font-bold text-white bg-slate-800 px-2 py-0.5 rounded">← →</span>
       </div>
 
-      {/* Scrollable Official Timetable Frame with Double-Line Border Design */}
+      {/* Scrollable Official Timetable Frame - NO PADDING (p-0) TO ELIMINATE LEFT GAPS */}
       <div 
-        className="w-full max-w-full overflow-x-auto rounded-lg border-4 border-double border-slate-800 bg-white p-2 shadow-sm scrollbar-thin relative"
+        className="w-full max-w-full overflow-x-auto rounded-lg border-4 border-double border-slate-800 bg-white p-0 shadow-sm scrollbar-thin relative"
         style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
       >
         <style dangerouslySetInnerHTML={{__html: `
@@ -183,7 +183,7 @@ export function Timetable() {
               position: sticky;
               left: 0px;
               z-index: 30;
-              box-shadow: 3px 0 5px rgba(0,0,0,0.2);
+              box-shadow: -15px 0 0 0 #52525b, 3px 0 5px rgba(0,0,0,0.2);
           }
 
           .doc-spacer {
