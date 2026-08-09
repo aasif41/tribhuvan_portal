@@ -63,7 +63,7 @@ export function Timetable() {
       const timeSlot = timeSlots[i];
       
       if (timeSlot.isLunch) {
-        // Lunch column is handled by rowSpan={6} in table body
+        // Lunch column is handled by rowSpan={5} in table body
         continue;
       }
 
@@ -177,6 +177,10 @@ export function Timetable() {
               text-align: center;
               width: 45px !important;
               min-width: 45px !important;
+              position: sticky;
+              left: -1px;
+              z-index: 25;
+              box-shadow: 3px 0 6px rgba(0,0,0,0.18);
           }
         `}} />
 
@@ -197,10 +201,9 @@ export function Timetable() {
 
             {/* Time Slots + CR Header Row */}
             <tr className="bg-white text-slate-900">
-              <th className="official-day-name sticky left-0 z-30 shadow-md">
-                Day
-              </th>
-              <th className="w-2 min-w-[8px] border-2 border-slate-700 bg-slate-300 sticky left-[45px] z-30"></th>
+              {/* Top-left cell left BLANK as requested */}
+              <th className="official-day-name sticky left-[-1px] z-30 shadow-md"></th>
+              <th className="w-2 min-w-[8px] border-2 border-slate-700 bg-slate-400 sticky left-[44px] z-30"></th>
               
               {timeSlots.map(slot => {
                 if (slot.isLunch) {
@@ -238,10 +241,10 @@ export function Timetable() {
             {/* LUNCH TALL COLUMN + DAY ROWS */}
             {DAYS.map((day, index) => (
               <tr key={day} className="h-24">
-                <td className="official-day-name sticky left-0 z-20 shadow-md">
+                <td className="official-day-name sticky left-[-1px] z-25 shadow-md">
                   {day}
                 </td>
-                <td className="border-2 border-slate-700 bg-slate-300 sticky left-[45px] z-20"></td>
+                <td className="border-2 border-slate-700 bg-slate-400 sticky left-[44px] z-25"></td>
                 
                 {/* Render Lunch cell with rowSpan={5} on Monday row */}
                 {index === 0 ? (
