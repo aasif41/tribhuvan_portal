@@ -4,7 +4,7 @@ import { TimetableSlot } from '@tribhuvan/shared';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { TableSkeleton } from '../../components/ui/Skeleton';
-import { ArrowLeftRight, MapPin, User, Coffee, BookOpen } from 'lucide-react';
+import { ArrowLeftRight } from 'lucide-react';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -46,9 +46,10 @@ export function Timetable() {
     return 1;
   };
 
-  const getTeacherInitials = (name?: string) => {
-    if (!name) return 'TBA';
-    const parts = name.trim().split(' ');
+  const getTeacherInitials = (teacherName?: string) => {
+    if (!teacherName || teacherName === 'TBA') return '';
+    if (teacherName === 'C') return 'C';
+    const parts = teacherName.trim().split(' ');
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     return parts.map(p => p[0]).join('').toUpperCase();
   };
@@ -79,15 +80,14 @@ export function Timetable() {
           <td 
             key={`${day}-class-${i}`} 
             colSpan={colSpan} 
-            className="bg-white hover:bg-slate-50 transition-colors border border-slate-700 p-2 text-center align-middle"
+            className="bg-white border border-slate-800 p-2 text-center align-middle"
           >
-            <div className="font-semibold text-xs sm:text-sm text-slate-900 leading-tight">
+            <div className="font-semibold text-xs sm:text-sm text-black leading-snug">
               {classSlot.subject.name}
             </div>
-            {teacherName && (
-              <div className="text-[11px] font-medium text-slate-600 mt-1 flex items-center justify-center gap-1">
-                <User size={11} className="text-slate-400 shrink-0" />
-                <span>({initials})</span>
+            {initials && (
+              <div className="text-[11px] font-normal text-slate-800 mt-1">
+                ({initials})
               </div>
             )}
           </td>
@@ -95,21 +95,16 @@ export function Timetable() {
         cells.push(
           <td 
             key={`${day}-cr-${i}`} 
-            className="font-bold text-xs text-slate-800 bg-slate-50 border border-slate-700 p-1 text-center align-middle whitespace-nowrap min-w-[50px]"
+            className="font-semibold text-xs text-black bg-white border border-slate-800 p-1 text-center align-middle whitespace-normal leading-tight min-w-[45px]"
           >
-            {classSlot.room && classSlot.room !== 'TBA' ? (
-              <span className="inline-flex items-center justify-center gap-0.5 px-1 py-0.5 text-[11px] font-bold text-navy">
-                <MapPin size={10} className="shrink-0 text-amber-700" />
-                {classSlot.room}
-              </span>
-            ) : ''}
+            {classSlot.room && classSlot.room !== 'TBA' ? classSlot.room : ''}
           </td>
         );
         
         i += (span - 1);
       } else {
-        cells.push(<td key={`${day}-empty-${i}`} className="border border-slate-700 bg-white min-w-[140px]"></td>);
-        cells.push(<td key={`${day}-cr-${i}`} className="border border-slate-700 bg-slate-50/50 min-w-[50px]"></td>);
+        cells.push(<td key={`${day}-empty-${i}`} className="border border-slate-800 bg-white min-w-[130px]"></td>);
+        cells.push(<td key={`${day}-cr-${i}`} className="border border-slate-800 bg-white min-w-[45px]"></td>);
       }
     }
 
@@ -128,8 +123,8 @@ export function Timetable() {
   // Calculate total columns count for title header row
   const totalCols = 1 + 1 + timeSlots.reduce((acc, t) => acc + (t.isLunch ? 1 : 2), 0);
 
-  // Short program label matching screenshot e.g. "BSC CS Timetable: Semester-VIth"
-  const titleProgram = program.includes('Computer Science') ? 'BSC CS' : program;
+  // Program header title string matching exact screenshot e.g. "BSC CS Timetable: Semester-VIth"
+  const titleProgram = program.includes('Computer Science') ? 'BSC CS' : program.toUpperCase();
   const semRoman = semester === 6 ? 'VIth' : `Sem-${semester}`;
 
   return (
@@ -137,110 +132,109 @@ export function Timetable() {
       <PageHeader title="Timetable" subtitle={`${program} • Semester ${semester}`} />
 
       {/* Horizontal Scroll Hint Banner for Mobile */}
-      <div className="sm:hidden flex items-center justify-between px-3.5 py-2.5 bg-navy/5 rounded-xl border border-navy/10 text-xs font-semibold text-navy select-none">
+      <div className="sm:hidden flex items-center justify-between px-3.5 py-2.5 bg-slate-100 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 select-none">
         <span className="flex items-center gap-2">
-          <ArrowLeftRight size={14} className="text-gold shrink-0 animate-pulse" />
+          <ArrowLeftRight size={14} className="text-slate-700 shrink-0" />
           <span>Swipe left to right to see full timetable</span>
         </span>
-        <span className="text-xs font-bold text-gold bg-navy px-2 py-0.5 rounded">← →</span>
+        <span className="text-xs font-bold text-white bg-slate-800 px-2 py-0.5 rounded">← →</span>
       </div>
 
       {/* Scrollable Official Timetable Frame */}
       <div 
-        className="w-full max-w-full overflow-x-auto rounded-xl border-4 border-double border-slate-700 bg-slate-700 p-0 shadow-md scrollbar-thin relative"
+        className="w-full max-w-full overflow-x-auto rounded-lg border-4 border-double border-slate-800 bg-white p-2 shadow-sm scrollbar-thin relative"
         style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
       >
         <style dangerouslySetInnerHTML={{__html: `
-          .official-timetable {
+          .doc-timetable {
               table-layout: fixed;
-              border-collapse: separate;
-              border-spacing: 0px;
-              border: none;
-              min-width: 1400px;
+              border-collapse: collapse;
+              border: 2px solid #27272a;
+              min-width: 1350px;
               width: max-content;
               font-size: 0.825rem;
+              background-color: #ffffff;
+              color: #000000;
               margin: 0;
           }
 
-          .official-timetable th, .official-timetable td {
-              border: 1px solid #475569;
-              padding: 6px;
+          .doc-timetable th, .doc-timetable td {
+              border: 1px solid #3f3f46;
+              padding: 6px 8px;
               overflow: hidden;
+              vertical-align: middle;
           }
 
-          .official-timetable th {
+          .doc-timetable th {
               white-space: nowrap;
           }
 
-          .official-day-name {
-              background-color: #334155 !important;
+          .doc-day-name {
+              background-color: #52525b !important;
               color: #ffffff !important;
               writing-mode: vertical-rl;
               text-orientation: mixed;
               font-size: 0.95rem;
               font-weight: 700;
               text-align: center;
-              width: 45px !important;
-              min-width: 45px !important;
+              width: 42px !important;
+              min-width: 42px !important;
               position: sticky;
               left: 0px;
               z-index: 30;
-              box-shadow: 4px 0 6px rgba(0,0,0,0.25);
+              box-shadow: 3px 0 5px rgba(0,0,0,0.2);
           }
 
-          .official-spacer {
+          .doc-spacer {
               position: sticky;
-              left: 45px;
+              left: 42px;
               z-index: 30;
-              background-color: #475569 !important;
-              box-shadow: 2px 0 4px rgba(0,0,0,0.15);
+              background-color: #ffffff !important;
+              border-right: 3px double #27272a !important;
+              width: 8px !important;
+              min-width: 8px !important;
           }
         `}} />
 
-        <table className="official-timetable">
+        <table className="doc-timetable">
           <thead>
-            {/* Title Header Row (Exact match with uploaded picture) */}
-            <tr className="bg-white text-slate-900 border-b-2 border-slate-700">
+            {/* Title Header Row (Exact match with screenshot) */}
+            <tr className="bg-white text-black border-b-2 border-slate-800">
               <th 
                 colSpan={totalCols} 
-                className="py-2.5 px-4 font-black text-sm text-slate-900 text-center border-2 border-slate-700 uppercase tracking-wide bg-slate-50"
+                className="py-2.5 px-4 font-extrabold text-sm text-black text-center border-2 border-slate-800 uppercase tracking-wide bg-white"
               >
-                <div className="flex items-center justify-center gap-2">
-                  <BookOpen size={16} className="text-gold shrink-0" />
-                  <span>{titleProgram} Timetable: Semester-{semRoman}</span>
-                </div>
+                {titleProgram} Timetable: Semester-{semRoman}
               </th>
             </tr>
 
             {/* Time Slots + CR Header Row */}
-            <tr className="bg-white text-slate-900">
+            <tr className="bg-white text-black">
               {/* Top-left cell left BLANK and STICKY */}
-              <th className="official-day-name"></th>
-              <th className="w-2 min-w-[8px] border-2 border-slate-700 official-spacer"></th>
+              <th className="doc-day-name"></th>
+              <th className="doc-spacer"></th>
               
               {timeSlots.map(slot => {
                 if (slot.isLunch) {
                   return (
                     <th 
                       key={slot.id} 
-                      className="w-24 min-w-[90px] p-2 font-bold text-slate-900 bg-slate-100 border-2 border-slate-700 text-center whitespace-nowrap text-xs"
+                      className="w-24 min-w-[90px] p-2 font-bold text-black bg-white border-2 border-slate-800 text-center whitespace-nowrap text-xs border-l-2 border-r-2"
+                      style={{ borderLeftStyle: 'double', borderRightStyle: 'double' }}
                     >
-                      <div className="flex items-center justify-center gap-1">
-                        <Coffee size={12} className="text-amber-800 shrink-0" />
-                        <span>{slot.label || '12:55 - 1:35'}</span>
-                      </div>
+                      {slot.label || '12:55 - 1:35'}
                     </th>
                   );
                 }
                 return (
                   <React.Fragment key={slot.id}>
                     <th 
-                      className="w-36 min-w-[140px] p-2 font-bold text-slate-900 bg-white border-2 border-slate-700 text-center whitespace-nowrap text-xs"
+                      className="w-36 min-w-[130px] p-2 font-bold text-black bg-white border-2 border-slate-800 text-center whitespace-nowrap text-xs"
                     >
                       {slot.label || `${slot.start} - ${slot.end}`}
                     </th>
                     <th 
-                      className="w-10 min-w-[42px] p-1.5 font-bold text-white bg-slate-700 border-2 border-slate-700 text-center text-xs lowercase"
+                      className="w-10 min-w-[36px] p-1.5 font-bold text-white bg-zinc-600 border-2 border-slate-800 text-center text-xs lowercase"
                     >
                       cr
                     </th>
@@ -254,10 +248,10 @@ export function Timetable() {
             {/* LUNCH TALL COLUMN + DAY ROWS */}
             {DAYS.map((day, index) => (
               <tr key={day} className="h-24">
-                <td className="official-day-name">
+                <td className="doc-day-name">
                   {day}
                 </td>
-                <td className="border-2 border-slate-700 official-spacer"></td>
+                <td className="doc-spacer"></td>
                 
                 {/* Render Lunch cell with rowSpan={5} on Monday row */}
                 {index === 0 ? (
@@ -268,10 +262,15 @@ export function Timetable() {
                     {/* Tall Vertical LUNCH Column */}
                     <td 
                       rowSpan={5} 
-                      className="bg-white font-extrabold text-slate-900 text-center tracking-widest border-2 border-slate-700 p-2 align-middle select-none text-2xl leading-relaxed"
-                      style={{ writingMode: 'vertical-rl', textOrientation: 'upright' }}
+                      className="bg-white font-black text-black text-center tracking-widest border-2 border-slate-800 p-2 align-middle select-none text-2xl"
+                      style={{ 
+                        writingMode: 'vertical-rl', 
+                        textOrientation: 'upright',
+                        borderLeft: '3px double #27272a',
+                        borderRight: '3px double #27272a'
+                      }}
                     >
-                      <div className="flex flex-col items-center justify-center tracking-[0.6em] font-serif font-black">
+                      <div className="flex flex-col items-center justify-center tracking-[0.5em] font-serif font-black">
                         L U N C H
                       </div>
                     </td>
