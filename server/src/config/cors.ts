@@ -45,6 +45,10 @@ export function isOriginAllowed(
     // Invalid URL structure
   }
 
-  return callback(new Error(`Origin ${origin} not allowed by CORS`), false);
+  console.warn(`⛔ CORS rejected origin: ${origin}`);
+  const corsError: any = new Error('Forbidden');
+  corsError.statusCode = 403;
+  corsError.code = 'CORS_REJECTED';
+  return callback(corsError, false);
 }
 

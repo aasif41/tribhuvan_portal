@@ -11,6 +11,13 @@ export function errorMiddleware(
   res: Response,
   _next: NextFunction
 ): void {
+  // CORS rejections: return clean 403 with no internal detail
+  if (err.code === 'CORS_REJECTED') {
+    console.error(`❌ [403] CORS rejection`);
+    res.status(403).json({ success: false, message: 'Forbidden' });
+    return;
+  }
+
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
 
