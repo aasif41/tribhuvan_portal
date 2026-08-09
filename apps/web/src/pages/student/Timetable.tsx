@@ -4,7 +4,7 @@ import { TimetableSlot } from '@tribhuvan/shared';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { TableSkeleton } from '../../components/ui/Skeleton';
-import { ArrowLeftRight } from 'lucide-react';
+import { ArrowLeftRight, MapPin, User, Coffee } from 'lucide-react';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -28,7 +28,7 @@ export function Timetable() {
         api.get('/timetable/settings'),
         api.get(`/timetable?program=${program}&semester=${semester}`)
       ]);
-      setTimeSlots(settingsRes.data.data);
+      setTimeSlots(settingsRes.data.data || []);
       setSlots(slotsRes.data.data || []);
     } catch (error) {
       console.error('Error fetching timetable', error);
@@ -54,31 +54,59 @@ export function Timetable() {
 
     for (let i = 0; i < timeSlots.length; i++) {
       const timeSlot = timeSlots[i];
-      if (timeSlot.isLunch) continue;
+      
+      if (timeSlot.isLunch) {
+        cells.push(
+          <td 
+            key={`${day}-lunch-${i}`} 
+            className="bg-amber-100 text-amber-950 border border-amber-300 p-2 text-center align-middle font-extrabold text-xs select-none tracking-widest min-w-[100px]"
+          >
+            LUNCH
+          </td>
+        );
+        continue;
+      }
+
       const classSlot = getSlotAtTime(timeSlot.start);
 
       if (classSlot) {
         const span = calculateSpan(classSlot.startTime, classSlot.endTime);
         const colSpan = span * 2 - 1;
+        const teacherName = (classSlot as any).teacher?.user?.name || (classSlot.subject as any)?.teacher?.user?.name || 'Faculty TBA';
         
         cells.push(
-          <td key={`${day}-class-${i}`} colSpan={colSpan} className="bg-blue-50/70 border border-slate-300 p-2 text-center align-middle font-medium text-navy">
-            <div className="font-bold text-xs sm:text-sm">{classSlot.subject.name}</div>
-            <div className="text-[11px] text-brand-muted mt-0.5">
-              ({(classSlot as any).teacher?.user?.name?.split(' ').map((n: string) => n[0]).join('') || (classSlot.subject as any)?.teacher?.user?.name?.split(' ').map((n: string) => n[0]).join('') || 'TBA'})
+          <td 
+            key={`${day}-class-${i}`} 
+            colSpan={colSpan} 
+            className="bg-blue-50 hover:bg-blue-100/90 transition-colors border border-slate-300 p-2.5 text-center align-middle"
+          >
+            <div className="font-bold text-xs sm:text-sm text-navy leading-tight whitespace-normal">
+              {classSlot.subject.name}
+            </div>
+            <div className="text-[11px] text-slate-600 font-medium mt-1 flex items-center justify-center gap-1 whitespace-nowrap">
+              <User size={11} className="text-slate-400 shrink-0" />
+              <span>{teacherName}</span>
             </div>
           </td>
         );
         cells.push(
-          <td key={`${day}-cr-${i}`} className="font-bold text-xs text-slate-700 bg-amber-50/60 border border-slate-300 p-1.5 text-center align-middle">
-            {classSlot.room !== 'TBA' ? classSlot.room : ''}
+          <td 
+            key={`${day}-cr-${i}`} 
+            className="font-bold text-xs text-amber-950 bg-amber-50 border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap min-w-[55px]"
+          >
+            {classSlot.room && classSlot.room !== 'TBA' ? (
+              <span className="inline-flex items-center justify-center gap-0.5 px-1.5 py-0.5 bg-amber-200/80 rounded text-[11px]">
+                <MapPin size={10} className="shrink-0" />
+                {classSlot.room}
+              </span>
+            ) : '-'}
           </td>
         );
         
         i += (span - 1);
       } else {
-        cells.push(<td key={`${day}-empty-${i}`} className="border border-slate-200 bg-white"></td>);
-        cells.push(<td key={`${day}-cr-${i}`} className="border border-slate-200 bg-slate-50/50"></td>);
+        cells.push(<td key={`${day}-empty-${i}`} className="border border-slate-200 bg-white min-w-[140px]"></td>);
+        cells.push(<td key={`${day}-cr-${i}`} className="border border-slate-200 bg-slate-50/40 min-w-[55px]"></td>);
       }
     }
 
@@ -94,120 +122,94 @@ export function Timetable() {
     );
   }
 
+  // Calculate total columns count for title header
+  const totalCols = 1 + 1 + timeSlots.reduce((acc, t) => acc + (t.isLunch ? 1 : 2), 0);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full overflow-x-hidden">
       <PageHeader title="Timetable" subtitle={`${program} • Semester ${semester}`} />
 
-      {/* Responsive Horizontal Scroll Container */}
-      <div className="w-full space-y-2">
-        {/* Mobile Horizontal Scroll Indicator Banner */}
-        <div className="sm:hidden flex items-center justify-between px-3 py-2 bg-slate-100/90 rounded-lg border border-slate-200 text-xs text-slate-700 font-semibold select-none">
-          <span className="flex items-center gap-1.5">
-            <ArrowLeftRight size={14} className="text-gold shrink-0" />
-            <span>Scroll horizontally (left-to-right) to view full timetable</span>
-          </span>
-          <span className="text-xs font-bold text-navy">← →</span>
-        </div>
+      {/* Horizontal Scroll Hint Banner for Mobile */}
+      <div className="sm:hidden flex items-center justify-between px-3.5 py-2.5 bg-navy/5 rounded-xl border border-navy/10 text-xs font-semibold text-navy select-none">
+        <span className="flex items-center gap-2">
+          <ArrowLeftRight size={14} className="text-gold shrink-0 animate-pulse" />
+          <span>Swipe left to right to see full timetable</span>
+        </span>
+        <span className="text-xs font-bold text-gold bg-navy px-2 py-0.5 rounded">← →</span>
+      </div>
 
-        {/* Scrollable Table Card */}
-        <div className="w-full overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 sm:p-4 shadow-2xs">
-          <style dangerouslySetInnerHTML={{__html: `
-            .custom-timetable {
-                table-layout: fixed;
-                border-collapse: separate;
-                border-spacing: 2px;
-                border: 1px solid #cbd5e1;
-                min-width: 1100px;
-                width: 100%;
-                font-size: 0.8rem;
-            }
+      {/* Scrollable Timetable Card */}
+      <div 
+        className="w-full max-w-full overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm scrollbar-thin relative"
+        style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
+      >
+        <table 
+          className="border-collapse border border-slate-300 text-xs" 
+          style={{ minWidth: '1350px', width: 'max-content' }}
+        >
+          <thead>
+            {/* Title Header */}
+            <tr className="bg-navy text-white">
+              <th 
+                colSpan={totalCols} 
+                className="py-3 px-4 font-bold text-sm bg-navy text-gold text-center border-b-2 border-gold/30 tracking-wide"
+              >
+                {program} — Semester {semester} Class Timetable
+              </th>
+            </tr>
 
-            .custom-timetable th, .custom-timetable td {
-                border: 1px solid #cbd5e1;
-                padding: 6px;
-                overflow: hidden;
-            }
-
-            .custom-timetable th {
-                white-space: nowrap;
-            }
-
-            .day-name {
-                background-color: #0d1f3c;
-                color: #c8922a;
-                writing-mode: vertical-rl;
-                text-orientation: mixed;
-                font-size: 1rem;
-                font-weight: 700;
-                text-align: center;
-                width: 45px;
-                min-width: 45px;
-            }
-          `}} />
-
-          <table align="center" bgcolor="White" className="custom-timetable" style={{ minWidth: '1100px' }}>
-            <colgroup>
-              <col style={{width: "4%"}} />
-              <col style={{width: "0.5%"}} />
-
-              <col style={{width: "7.25%"}} /><col style={{width: "4%"}} />
-              <col style={{width: "7.25%"}} /><col style={{width: "4%"}} />
-              <col style={{width: "7.25%"}} /><col style={{width: "4%"}} />
-              <col style={{width: "7.25%"}} /><col style={{width: "4%"}} />
-
-              <col style={{width: "6%"}} />
-
-              <col style={{width: "7.25%"}} /><col style={{width: "4%"}} />
-              <col style={{width: "7.25%"}} /><col style={{width: "4%"}} />
-              <col style={{width: "7.25%"}} /><col style={{width: "4%"}} />
-              <col style={{width: "7.25%"}} /><col style={{width: "4%"}} />
-            </colgroup>
-
-            <tbody>
-              <tr className="bg-navy text-white">
-                <th colSpan={19} className="py-2.5 font-bold text-sm bg-navy text-gold text-center border-b border-navy/20">
-                  {program} Timetable: Semester-{semester}
-                </th>
-              </tr>
-
-              {/* TIME ROW */}
-              <tr className="bg-slate-100">
-                <th className="bg-navy text-gold">Day</th>
-                <th></th>
-                {timeSlots.map(slot => {
-                  if (slot.isLunch) {
-                    return <th key={slot.id} className="bg-slate-200 font-bold text-slate-700">{slot.label || '12:55 - 1:35'}</th>;
-                  }
+            {/* Time Header Slots */}
+            <tr className="bg-slate-100 text-slate-800">
+              <th className="w-28 min-w-[110px] p-3 font-extrabold bg-navy text-gold border border-slate-300 text-center uppercase tracking-wider text-xs sticky left-0 z-30 shadow-md">
+                Day
+              </th>
+              <th className="w-3 min-w-[12px] border border-slate-300 bg-slate-200 sticky left-[110px] z-30"></th>
+              
+              {timeSlots.map(slot => {
+                if (slot.isLunch) {
                   return (
-                    <React.Fragment key={slot.id}>
-                      <th className="bg-slate-100 font-bold text-slate-800">{slot.label || `${slot.start} - ${slot.end}`}</th>
-                      <th className="bg-slate-300 font-bold text-slate-700">CR</th>
-                    </React.Fragment>
+                    <th 
+                      key={slot.id} 
+                      className="w-28 min-w-[100px] p-2.5 font-bold text-amber-900 bg-amber-200/90 border border-slate-300 text-center whitespace-nowrap text-xs"
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <Coffee size={13} className="text-amber-800 shrink-0" />
+                        <span>LUNCH ({slot.label || '12:55 - 1:35'})</span>
+                      </div>
+                    </th>
                   );
-                })}
-              </tr>
+                }
+                return (
+                  <React.Fragment key={slot.id}>
+                    <th 
+                      className="w-36 min-w-[140px] p-2.5 font-bold text-slate-800 bg-slate-100 border border-slate-300 text-center whitespace-nowrap text-xs"
+                    >
+                      {slot.label || `${slot.start} - ${slot.end}`}
+                    </th>
+                    <th 
+                      className="w-14 min-w-[55px] p-2 font-bold text-slate-600 bg-slate-200 border border-slate-300 text-center text-[11px]"
+                    >
+                      CR
+                    </th>
+                  </React.Fragment>
+                );
+              })}
+            </tr>
+          </thead>
 
-              {/* LUNCH */}
-              <tr>
-                <td className="day-name"></td>
-                <td></td>
-                <td colSpan={8} className="bg-slate-50"></td>
-                <td rowSpan={6} className="bg-amber-100/60 font-extrabold text-navy text-center tracking-widest leading-loose" style={{fontSize: "2rem"}}>
-                  L<br/>U<br/>N<br/>C<br/>H
+          <tbody>
+            {/* DAY ROWS */}
+            {DAYS.map(day => (
+              <tr key={day} className="h-24">
+                <td className="p-3 bg-navy text-gold font-bold text-center border border-slate-300 align-middle text-sm sticky left-0 z-20 shadow-md">
+                  {day}
                 </td>
-                <td colSpan={8} className="bg-slate-50"></td>
+                <td className="border border-slate-300 bg-slate-200 sticky left-[110px] z-20"></td>
+                {renderDayRow(day)}
               </tr>
-
-              {DAYS.map(day => (
-                <tr key={day} style={{height: "110px"}}>
-                  <td className="day-name">{day}</td>
-                  <td></td>
-                  {renderDayRow(day)}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

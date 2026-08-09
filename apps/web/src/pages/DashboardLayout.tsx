@@ -7,14 +7,14 @@ export function DashboardLayout() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-brand-bg relative overflow-x-hidden">
+    <div className="flex min-h-screen bg-brand-bg relative max-w-full overflow-x-hidden">
       <Sidebar 
         isOpen={isMobileSidebarOpen} 
         onClose={() => setIsMobileSidebarOpen(false)} 
       />
-      <div className="flex-1 min-w-0 md:ml-64 flex flex-col">
+      <div className="flex-1 min-w-0 md:ml-64 flex flex-col max-w-full overflow-x-hidden">
         <Navbar onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)} />
-        <main className="page-container animate-fade-in flex-1 p-3 sm:p-6 lg:p-8">
+        <main className="page-container animate-fade-in flex-1 p-3 sm:p-6 lg:p-8 max-w-full overflow-x-hidden">
           <Outlet />
         </main>
       </div>
