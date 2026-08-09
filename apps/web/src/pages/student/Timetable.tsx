@@ -4,7 +4,7 @@ import { TimetableSlot } from '@tribhuvan/shared';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { TableSkeleton } from '../../components/ui/Skeleton';
-import { ArrowLeftRight, MapPin, User, Coffee } from 'lucide-react';
+import { ArrowLeftRight, MapPin, User, Coffee, BookOpen } from 'lucide-react';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -46,6 +46,13 @@ export function Timetable() {
     return 1;
   };
 
+  const getTeacherInitials = (name?: string) => {
+    if (!name) return 'TBA';
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return parts.map(p => p[0]).join('').toUpperCase();
+  };
+
   const renderDayRow = (day: string) => {
     const daySlots = slots.filter(s => s.day === day);
     const cells = [];
@@ -56,14 +63,7 @@ export function Timetable() {
       const timeSlot = timeSlots[i];
       
       if (timeSlot.isLunch) {
-        cells.push(
-          <td 
-            key={`${day}-lunch-${i}`} 
-            className="bg-amber-100 text-amber-950 border border-amber-300 p-2 text-center align-middle font-extrabold text-xs select-none tracking-widest min-w-[100px]"
-          >
-            LUNCH
-          </td>
-        );
+        // Lunch column is handled by rowSpan={6} in table body
         continue;
       }
 
@@ -72,41 +72,44 @@ export function Timetable() {
       if (classSlot) {
         const span = calculateSpan(classSlot.startTime, classSlot.endTime);
         const colSpan = span * 2 - 1;
-        const teacherName = (classSlot as any).teacher?.user?.name || (classSlot.subject as any)?.teacher?.user?.name || 'Faculty TBA';
+        const teacherName = (classSlot as any).teacher?.user?.name || (classSlot.subject as any)?.teacher?.user?.name || '';
+        const initials = getTeacherInitials(teacherName);
         
         cells.push(
           <td 
             key={`${day}-class-${i}`} 
             colSpan={colSpan} 
-            className="bg-blue-50 hover:bg-blue-100/90 transition-colors border border-slate-300 p-2.5 text-center align-middle"
+            className="bg-white hover:bg-slate-50 transition-colors border border-slate-700 p-2 text-center align-middle"
           >
-            <div className="font-bold text-xs sm:text-sm text-navy leading-tight whitespace-normal">
+            <div className="font-semibold text-xs sm:text-sm text-slate-900 leading-tight">
               {classSlot.subject.name}
             </div>
-            <div className="text-[11px] text-slate-600 font-medium mt-1 flex items-center justify-center gap-1 whitespace-nowrap">
-              <User size={11} className="text-slate-400 shrink-0" />
-              <span>{teacherName}</span>
-            </div>
+            {teacherName && (
+              <div className="text-[11px] font-medium text-slate-600 mt-1 flex items-center justify-center gap-1">
+                <User size={11} className="text-slate-400 shrink-0" />
+                <span>({initials})</span>
+              </div>
+            )}
           </td>
         );
         cells.push(
           <td 
             key={`${day}-cr-${i}`} 
-            className="font-bold text-xs text-amber-950 bg-amber-50 border border-slate-300 p-1.5 text-center align-middle whitespace-nowrap min-w-[55px]"
+            className="font-bold text-xs text-slate-800 bg-slate-50 border border-slate-700 p-1 text-center align-middle whitespace-nowrap min-w-[50px]"
           >
             {classSlot.room && classSlot.room !== 'TBA' ? (
-              <span className="inline-flex items-center justify-center gap-0.5 px-1.5 py-0.5 bg-amber-200/80 rounded text-[11px]">
-                <MapPin size={10} className="shrink-0" />
+              <span className="inline-flex items-center justify-center gap-0.5 px-1 py-0.5 text-[11px] font-bold text-navy">
+                <MapPin size={10} className="shrink-0 text-amber-700" />
                 {classSlot.room}
               </span>
-            ) : '-'}
+            ) : ''}
           </td>
         );
         
         i += (span - 1);
       } else {
-        cells.push(<td key={`${day}-empty-${i}`} className="border border-slate-200 bg-white min-w-[140px]"></td>);
-        cells.push(<td key={`${day}-cr-${i}`} className="border border-slate-200 bg-slate-50/40 min-w-[55px]"></td>);
+        cells.push(<td key={`${day}-empty-${i}`} className="border border-slate-700 bg-white min-w-[140px]"></td>);
+        cells.push(<td key={`${day}-cr-${i}`} className="border border-slate-700 bg-slate-50/50 min-w-[50px]"></td>);
       }
     }
 
@@ -138,43 +141,77 @@ export function Timetable() {
         <span className="text-xs font-bold text-gold bg-navy px-2 py-0.5 rounded">← →</span>
       </div>
 
-      {/* Scrollable Timetable Card */}
+      {/* Scrollable Official Timetable Frame */}
       <div 
-        className="w-full max-w-full overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm scrollbar-thin relative"
+        className="w-full max-w-full overflow-x-auto rounded-xl border-4 border-double border-slate-700 bg-white p-3 shadow-md scrollbar-thin relative"
         style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
       >
-        <table 
-          className="border-collapse border border-slate-300 text-xs" 
-          style={{ minWidth: '1350px', width: 'max-content' }}
-        >
+        <style dangerouslySetInnerHTML={{__html: `
+          .official-timetable {
+              table-layout: fixed;
+              border-collapse: separate;
+              border-spacing: 2px;
+              border: 2px solid #334155;
+              min-width: 1350px;
+              width: max-content;
+              font-size: 0.825rem;
+          }
+
+          .official-timetable th, .official-timetable td {
+              border: 1px solid #475569;
+              padding: 6px;
+              overflow: hidden;
+          }
+
+          .official-timetable th {
+              white-space: nowrap;
+          }
+
+          .official-day-name {
+              background-color: #334155 !important;
+              color: #ffffff !important;
+              writing-mode: vertical-rl;
+              text-orientation: mixed;
+              font-size: 0.95rem;
+              font-weight: 700;
+              text-align: center;
+              width: 45px !important;
+              min-width: 45px !important;
+          }
+        `}} />
+
+        <table className="official-timetable" align="center">
           <thead>
-            {/* Title Header */}
-            <tr className="bg-navy text-white">
+            {/* Title Header Row */}
+            <tr className="bg-white text-slate-900 border-b-2 border-slate-700">
               <th 
                 colSpan={totalCols} 
-                className="py-3 px-4 font-bold text-sm bg-navy text-gold text-center border-b-2 border-gold/30 tracking-wide"
+                className="py-3 px-4 font-extrabold text-base text-slate-900 text-center border-2 border-slate-700 uppercase tracking-wide bg-slate-50"
               >
-                {program} — Semester {semester} Class Timetable
+                <div className="flex items-center justify-center gap-2">
+                  <BookOpen size={18} className="text-gold shrink-0" />
+                  <span>{program} Timetable: Semester-{semester === 6 ? 'VIth' : semester}</span>
+                </div>
               </th>
             </tr>
 
-            {/* Time Header Slots */}
-            <tr className="bg-slate-100 text-slate-800">
-              <th className="w-28 min-w-[110px] p-3 font-extrabold bg-navy text-gold border border-slate-300 text-center uppercase tracking-wider text-xs sticky left-0 z-30 shadow-md">
+            {/* Time Slots + CR Header Row */}
+            <tr className="bg-white text-slate-900">
+              <th className="official-day-name sticky left-0 z-30 shadow-md">
                 Day
               </th>
-              <th className="w-3 min-w-[12px] border border-slate-300 bg-slate-200 sticky left-[110px] z-30"></th>
+              <th className="w-2 min-w-[8px] border-2 border-slate-700 bg-slate-300 sticky left-[45px] z-30"></th>
               
               {timeSlots.map(slot => {
                 if (slot.isLunch) {
                   return (
                     <th 
                       key={slot.id} 
-                      className="w-28 min-w-[100px] p-2.5 font-bold text-amber-900 bg-amber-200/90 border border-slate-300 text-center whitespace-nowrap text-xs"
+                      className="w-24 min-w-[90px] p-2 font-bold text-slate-900 bg-slate-100 border-2 border-slate-700 text-center whitespace-nowrap text-xs"
                     >
                       <div className="flex items-center justify-center gap-1">
-                        <Coffee size={13} className="text-amber-800 shrink-0" />
-                        <span>LUNCH ({slot.label || '12:55 - 1:35'})</span>
+                        <Coffee size={12} className="text-amber-800 shrink-0" />
+                        <span>{slot.label || '12:55 - 1:35'}</span>
                       </div>
                     </th>
                   );
@@ -182,14 +219,14 @@ export function Timetable() {
                 return (
                   <React.Fragment key={slot.id}>
                     <th 
-                      className="w-36 min-w-[140px] p-2.5 font-bold text-slate-800 bg-slate-100 border border-slate-300 text-center whitespace-nowrap text-xs"
+                      className="w-36 min-w-[140px] p-2 font-bold text-slate-900 bg-white border-2 border-slate-700 text-center whitespace-nowrap text-xs"
                     >
                       {slot.label || `${slot.start} - ${slot.end}`}
                     </th>
                     <th 
-                      className="w-14 min-w-[55px] p-2 font-bold text-slate-600 bg-slate-200 border border-slate-300 text-center text-[11px]"
+                      className="w-10 min-w-[42px] p-1.5 font-bold text-white bg-slate-700 border-2 border-slate-700 text-center text-xs lowercase"
                     >
-                      CR
+                      cr
                     </th>
                   </React.Fragment>
                 );
@@ -198,14 +235,37 @@ export function Timetable() {
           </thead>
 
           <tbody>
-            {/* DAY ROWS */}
-            {DAYS.map(day => (
+            {/* LUNCH TALL COLUMN + DAY ROWS */}
+            {DAYS.map((day, index) => (
               <tr key={day} className="h-24">
-                <td className="p-3 bg-navy text-gold font-bold text-center border border-slate-300 align-middle text-sm sticky left-0 z-20 shadow-md">
+                <td className="official-day-name sticky left-0 z-20 shadow-md">
                   {day}
                 </td>
-                <td className="border border-slate-300 bg-slate-200 sticky left-[110px] z-20"></td>
-                {renderDayRow(day)}
+                <td className="border-2 border-slate-700 bg-slate-300 sticky left-[45px] z-20"></td>
+                
+                {/* Render Lunch cell with rowSpan={5} on Monday row */}
+                {index === 0 ? (
+                  <>
+                    {/* Cells before lunch */}
+                    {renderDayRow(day).slice(0, 8)}
+                    
+                    {/* Tall Vertical LUNCH Column */}
+                    <td 
+                      rowSpan={5} 
+                      className="bg-white font-extrabold text-slate-900 text-center tracking-widest border-2 border-slate-700 p-2 align-middle select-none text-2xl leading-relaxed"
+                      style={{ writingMode: 'vertical-rl', textOrientation: 'upright' }}
+                    >
+                      <div className="flex flex-col items-center justify-center tracking-[0.6em] font-serif font-black">
+                        L U N C H
+                      </div>
+                    </td>
+
+                    {/* Cells after lunch */}
+                    {renderDayRow(day).slice(8)}
+                  </>
+                ) : (
+                  renderDayRow(day)
+                )}
               </tr>
             ))}
           </tbody>
