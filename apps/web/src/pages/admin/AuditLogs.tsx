@@ -172,8 +172,8 @@ export function AuditLogs() {
             <p className="text-sm font-medium">No audit logs found matching your criteria</p>
           </div>
         ) : (
-          <div className="w-full overflow-x-auto rounded-xl border border-gray-100 shadow-2xs">
-            <table className="w-full text-left text-xs">
+          <div className="w-full max-w-full overflow-x-auto rounded-xl border border-gray-100 shadow-2xs touch-pan-x">
+            <table className="w-full text-left text-xs min-w-[750px]" style={{ minWidth: '750px' }}>
               <thead className="bg-gray-50 text-gray-600 font-semibold border-b border-gray-100 uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="py-3 px-4">Timestamp</th>

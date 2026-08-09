@@ -396,8 +396,8 @@ export function MarkAttendance() {
             No students enrolled in this subject.
           </div>
         ) : (
-          <div ref={tableContainerRef} className="overflow-x-auto border border-brand-divider rounded-lg scroll-smooth pb-4">
-            <table className="w-full text-sm text-left whitespace-nowrap">
+          <div ref={tableContainerRef} className="w-full overflow-x-auto max-w-full border border-brand-divider rounded-xl scroll-smooth pb-4 touch-pan-x shadow-2xs">
+            <table className="w-full text-sm text-left whitespace-nowrap min-w-[1050px]" style={{ minWidth: '1050px' }}>
               <thead className="bg-navy text-white">
                 <tr>
                   <th colSpan={2} className="bg-navy border-b border-navy/10 sticky left-0 z-20"></th>

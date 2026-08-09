@@ -228,8 +228,8 @@ export function ManagePrograms() {
             No academic programs found. Click "Add New Program" to create one.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[650px]">
+          <div className="w-full max-w-full overflow-x-auto rounded-xl border border-gray-100 shadow-2xs touch-pan-x">
+            <table className="w-full text-left border-collapse min-w-[750px]" style={{ minWidth: '750px' }}>
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100 text-[11px] font-semibold text-brand-muted uppercase tracking-wider">
                   <th className="py-3.5 px-5">Program Name</th>

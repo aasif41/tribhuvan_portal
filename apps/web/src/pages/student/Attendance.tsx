@@ -213,9 +213,9 @@ export function Attendance() {
           </div>
 
           <div className="space-y-6">
-            {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+            {/* Table View */}
+            <div className="w-full max-w-full overflow-x-auto rounded-xl border border-gray-100 shadow-2xs touch-pan-x">
+              <table className="w-full text-left border-collapse min-w-[650px]" style={{ minWidth: '650px' }}>
                 <thead>
                   <tr className="border-b border-gray-100 text-xs font-semibold text-brand-muted uppercase tracking-wider">
                     <th className="pb-3 pt-2 pl-4">Date</th>

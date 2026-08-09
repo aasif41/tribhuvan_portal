@@ -69,8 +69,8 @@ export function ManageStudents() {
         {loading ? (
           <TableSkeleton rows={5} cols={5} />
         ) : (
-          <div className="w-full overflow-x-auto rounded-xl border border-gray-100 shadow-2xs">
-            <table className="w-full text-left border-collapse min-w-[600px]">
+          <div className="w-full max-w-full overflow-x-auto rounded-xl border border-gray-100 shadow-2xs touch-pan-x">
+            <table className="w-full text-left border-collapse min-w-[700px]" style={{ minWidth: '700px' }}>
               <thead>
                 <tr className="bg-gray-50 text-brand-muted text-sm uppercase tracking-wider border-b border-brand-border">
                   <th className="p-4 font-semibold">Student</th>
