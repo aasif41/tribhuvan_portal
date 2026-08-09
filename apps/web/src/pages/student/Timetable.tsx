@@ -141,20 +141,21 @@ export function Timetable() {
         <span className="text-xs font-bold text-gold bg-navy px-2 py-0.5 rounded">← →</span>
       </div>
 
-      {/* Scrollable Official Timetable Frame */}
+      {/* Scrollable Official Timetable Frame - NO PADDING TO PREVENT CONTENT LEAKING TO THE LEFT */}
       <div 
-        className="w-full max-w-full overflow-x-auto rounded-xl border-4 border-double border-slate-700 bg-white p-3 shadow-md scrollbar-thin relative"
+        className="w-full max-w-full overflow-x-auto rounded-xl border-4 border-double border-slate-700 bg-slate-700 p-0 shadow-md scrollbar-thin relative"
         style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
       >
         <style dangerouslySetInnerHTML={{__html: `
           .official-timetable {
               table-layout: fixed;
               border-collapse: separate;
-              border-spacing: 2px;
-              border: 2px solid #334155;
+              border-spacing: 0px;
+              border: none;
               min-width: 1350px;
               width: max-content;
               font-size: 0.825rem;
+              margin: 0;
           }
 
           .official-timetable th, .official-timetable td {
@@ -178,13 +179,21 @@ export function Timetable() {
               width: 45px !important;
               min-width: 45px !important;
               position: sticky;
-              left: -1px;
-              z-index: 25;
-              box-shadow: 3px 0 6px rgba(0,0,0,0.18);
+              left: 0px;
+              z-index: 30;
+              box-shadow: 4px 0 6px rgba(0,0,0,0.25);
+          }
+
+          .official-spacer {
+              position: sticky;
+              left: 45px;
+              z-index: 30;
+              background-color: #475569 !important;
+              box-shadow: 2px 0 4px rgba(0,0,0,0.15);
           }
         `}} />
 
-        <table className="official-timetable" align="center">
+        <table className="official-timetable">
           <thead>
             {/* Title Header Row */}
             <tr className="bg-white text-slate-900 border-b-2 border-slate-700">
@@ -201,9 +210,9 @@ export function Timetable() {
 
             {/* Time Slots + CR Header Row */}
             <tr className="bg-white text-slate-900">
-              {/* Top-left cell left BLANK as requested */}
-              <th className="official-day-name sticky left-[-1px] z-30 shadow-md"></th>
-              <th className="w-2 min-w-[8px] border-2 border-slate-700 bg-slate-400 sticky left-[44px] z-30"></th>
+              {/* Top-left cell left BLANK */}
+              <th className="official-day-name"></th>
+              <th className="w-2 min-w-[8px] border-2 border-slate-700 official-spacer"></th>
               
               {timeSlots.map(slot => {
                 if (slot.isLunch) {
@@ -241,10 +250,10 @@ export function Timetable() {
             {/* LUNCH TALL COLUMN + DAY ROWS */}
             {DAYS.map((day, index) => (
               <tr key={day} className="h-24">
-                <td className="official-day-name sticky left-[-1px] z-25 shadow-md">
+                <td className="official-day-name">
                   {day}
                 </td>
-                <td className="border-2 border-slate-700 bg-slate-400 sticky left-[44px] z-25"></td>
+                <td className="border-2 border-slate-700 official-spacer"></td>
                 
                 {/* Render Lunch cell with rowSpan={5} on Monday row */}
                 {index === 0 ? (
