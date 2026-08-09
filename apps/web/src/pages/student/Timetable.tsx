@@ -140,16 +140,17 @@ export function Timetable() {
         <span className="text-xs font-bold text-white bg-slate-800 px-2 py-0.5 rounded">← →</span>
       </div>
 
-      {/* Scrollable Official Timetable Frame */}
+      {/* Scrollable Official Timetable Frame with Double-Line Border Design */}
       <div 
         className="w-full max-w-full overflow-x-auto rounded-lg border-4 border-double border-slate-800 bg-white p-2 shadow-sm scrollbar-thin relative"
         style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
       >
         <style dangerouslySetInnerHTML={{__html: `
-          .doc-timetable {
+          .official-double-timetable {
               table-layout: fixed;
-              border-collapse: collapse;
-              border: 2px solid #27272a;
+              border-collapse: separate !important;
+              border-spacing: 2px !important;
+              border: 2px solid #27272a !important;
               min-width: 1350px;
               width: max-content;
               font-size: 0.825rem;
@@ -158,14 +159,14 @@ export function Timetable() {
               margin: 0;
           }
 
-          .doc-timetable th, .doc-timetable td {
-              border: 1px solid #3f3f46;
+          .official-double-timetable th, .official-double-timetable td {
+              border: 1px solid #27272a !important;
               padding: 6px 8px;
               overflow: hidden;
               vertical-align: middle;
           }
 
-          .doc-timetable th {
+          .official-double-timetable th {
               white-space: nowrap;
           }
 
@@ -187,19 +188,19 @@ export function Timetable() {
 
           .doc-spacer {
               position: sticky;
-              left: 42px;
+              left: 44px;
               z-index: 30;
               background-color: #ffffff !important;
-              border-right: 3px double #27272a !important;
-              width: 8px !important;
-              min-width: 8px !important;
+              width: 6px !important;
+              min-width: 6px !important;
+              padding: 0 !important;
           }
         `}} />
 
-        <table className="doc-timetable">
+        <table className="official-double-timetable">
           <thead>
             {/* Title Header Row (Exact match with screenshot) */}
-            <tr className="bg-white text-black border-b-2 border-slate-800">
+            <tr className="bg-white text-black">
               <th 
                 colSpan={totalCols} 
                 className="py-2.5 px-4 font-extrabold text-sm text-black text-center border-2 border-slate-800 uppercase tracking-wide bg-white"
@@ -219,8 +220,7 @@ export function Timetable() {
                   return (
                     <th 
                       key={slot.id} 
-                      className="w-24 min-w-[90px] p-2 font-bold text-black bg-white border-2 border-slate-800 text-center whitespace-nowrap text-xs border-l-2 border-r-2"
-                      style={{ borderLeftStyle: 'double', borderRightStyle: 'double' }}
+                      className="w-24 min-w-[90px] p-2 font-bold text-black bg-white border-2 border-slate-800 text-center whitespace-nowrap text-xs"
                     >
                       {slot.label || '12:55 - 1:35'}
                     </th>
@@ -265,9 +265,7 @@ export function Timetable() {
                       className="bg-white font-black text-black text-center tracking-widest border-2 border-slate-800 p-2 align-middle select-none text-2xl"
                       style={{ 
                         writingMode: 'vertical-rl', 
-                        textOrientation: 'upright',
-                        borderLeft: '3px double #27272a',
-                        borderRight: '3px double #27272a'
+                        textOrientation: 'upright'
                       }}
                     >
                       <div className="flex flex-col items-center justify-center tracking-[0.5em] font-serif font-black">
