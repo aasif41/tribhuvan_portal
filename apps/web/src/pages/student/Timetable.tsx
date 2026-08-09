@@ -4,7 +4,7 @@ import { TimetableSlot } from '@tribhuvan/shared';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { TableSkeleton } from '../../components/ui/Skeleton';
-import { ArrowLeftRight, MapPin, User, Coffee, BookOpen } from 'lucide-react';
+import { ArrowLeftRight, MapPin, User, Coffee } from 'lucide-react';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -125,12 +125,13 @@ export function Timetable() {
     );
   }
 
-  // Calculate total columns count for title header
-  const totalCols = 1 + 1 + timeSlots.reduce((acc, t) => acc + (t.isLunch ? 1 : 2), 0);
 
   return (
     <div className="space-y-6 max-w-full overflow-x-hidden">
-      <PageHeader title="Timetable" subtitle={`${program} • Semester ${semester}`} />
+      <PageHeader 
+        title={`${program} Timetable: Semester-${semester === 6 ? 'VIth' : semester}`} 
+        subtitle="Weekly Class Schedule" 
+      />
 
       {/* Horizontal Scroll Hint Banner for Mobile */}
       <div className="sm:hidden flex items-center justify-between px-3.5 py-2.5 bg-navy/5 rounded-xl border border-navy/10 text-xs font-semibold text-navy select-none">
@@ -141,7 +142,7 @@ export function Timetable() {
         <span className="text-xs font-bold text-gold bg-navy px-2 py-0.5 rounded">← →</span>
       </div>
 
-      {/* Scrollable Official Timetable Frame - NO PADDING TO PREVENT CONTENT LEAKING TO THE LEFT */}
+      {/* Scrollable Official Timetable Frame */}
       <div 
         className="w-full max-w-full overflow-x-auto rounded-xl border-4 border-double border-slate-700 bg-slate-700 p-0 shadow-md scrollbar-thin relative"
         style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
@@ -180,14 +181,14 @@ export function Timetable() {
               min-width: 45px !important;
               position: sticky;
               left: 0px;
-              z-index: 30;
+              z-index: 35;
               box-shadow: 4px 0 6px rgba(0,0,0,0.25);
           }
 
           .official-spacer {
               position: sticky;
               left: 45px;
-              z-index: 30;
+              z-index: 35;
               background-color: #475569 !important;
               box-shadow: 2px 0 4px rgba(0,0,0,0.15);
           }
@@ -195,22 +196,9 @@ export function Timetable() {
 
         <table className="official-timetable">
           <thead>
-            {/* Title Header Row */}
-            <tr className="bg-white text-slate-900 border-b-2 border-slate-700">
-              <th 
-                colSpan={totalCols} 
-                className="py-3 px-4 font-extrabold text-base text-slate-900 text-center border-2 border-slate-700 uppercase tracking-wide bg-slate-50"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <BookOpen size={18} className="text-gold shrink-0" />
-                  <span>{program} Timetable: Semester-{semester === 6 ? 'VIth' : semester}</span>
-                </div>
-              </th>
-            </tr>
-
             {/* Time Slots + CR Header Row */}
             <tr className="bg-white text-slate-900">
-              {/* Top-left cell left BLANK */}
+              {/* Top-left cell left BLANK and STICKY */}
               <th className="official-day-name"></th>
               <th className="w-2 min-w-[8px] border-2 border-slate-700 official-spacer"></th>
               
