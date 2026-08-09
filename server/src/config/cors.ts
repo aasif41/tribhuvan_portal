@@ -4,6 +4,7 @@ const staticAllowed = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:5000',
+  'https://tribhuvan-portal-web.vercel.app',
   'https://tribhuvancollege.ac.in',
 ];
 
@@ -32,12 +33,12 @@ export function isOriginAllowed(
 
   try {
     const url = new URL(origin);
-    // Allow Vercel deployment domains (*.vercel.app)
-    if (url.hostname.endsWith('.vercel.app') || url.hostname === 'vercel.app') {
-      return callback(null, true);
-    }
     // Allow college domain & subdomains
     if (url.hostname.endsWith('.tribhuvancollege.ac.in') || url.hostname === 'tribhuvancollege.ac.in') {
+      return callback(null, true);
+    }
+    // Allow this project's Vercel preview deployments only (pattern: tribhuvan-portal-web-*-.vercel.app)
+    if (/^tribhuvan-portal-web-[a-z0-9]+-[a-z0-9]+\.vercel\.app$/.test(url.hostname)) {
       return callback(null, true);
     }
   } catch {
@@ -46,3 +47,4 @@ export function isOriginAllowed(
 
   return callback(new Error(`Origin ${origin} not allowed by CORS`), false);
 }
+
