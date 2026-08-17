@@ -21,6 +21,7 @@
     "build": "npm run build:shared && npm run build:server",
     "db:migrate": "npm run migrate --workspace=server",
     "db:seed": "npm run seed --workspace=server",
+    "db:reset-admin": "npm run reset-admin --workspace=server",
     "db:studio": "npm run studio --workspace=server",
     "lint": "eslint .",
     "format": "prettier --write ."

@@ -8,6 +8,7 @@
     "start": "node dist/index.js",
     "migrate": "prisma migrate dev",
     "seed": "ts-node prisma/seed.ts",
+    "reset-admin": "ts-node prisma/resetAdminPassword.ts",
     "studio": "prisma studio",
     "typecheck": "tsc --noEmit"
   },
