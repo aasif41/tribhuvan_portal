@@ -1,9 +1,4 @@
 pluginManagement {
-  repositories {
-    google()
-    mavenCentral()
-    gradlePluginPortal()
-  }
   def reactNativeGradlePlugin = new File(
     providers.exec {
       workingDir(rootDir)
@@ -13,7 +8,11 @@ pluginManagement {
   includeBuild(reactNativeGradlePlugin)
 
   def monorepoRoot = rootDir.parentFile.parentFile.parentFile
-  includeBuild(new File(monorepoRoot, "node_modules/expo-modules-core/expo-module-gradle-plugin"))
+  def expoCorePlugin = new File(monorepoRoot, "node_modules/expo-modules-core/expo-module-gradle-plugin")
+  if (!expoCorePlugin.exists()) {
+    expoCorePlugin = new File(rootDir, "../node_modules/expo-modules-core/expo-module-gradle-plugin")
+  }
+  includeBuild(expoCorePlugin)
 }
 
 plugins {
@@ -52,4 +51,3 @@ apply from: new File(["node", "--print", "require.resolve('expo/package.json')"]
 useExpoModules()
 
 include ':app'
-includeBuild(new File(["node", "--print", "require.resolve('@react-native/gradle-plugin/package.json', { paths: [require.resolve('react-native/package.json')] })"].execute(null, rootDir).text.trim()).getParentFile())
