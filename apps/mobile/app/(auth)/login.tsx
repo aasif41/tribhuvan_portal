@@ -37,15 +37,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 type RoleType = 'STUDENT' | 'TEACHER';
 type TabType = 'LOGIN' | 'SIGNUP';
 
-const DEPARTMENTS = [
-  'Computer Science & Engineering',
-  'Environmental Sciences',
-  'Information Technology',
-  'Basic Sciences & Humanities',
-  'Management & Business Studies',
-  'Civil & Environmental Engineering',
-];
-
 const SPRING_CONFIG = {
   damping: 18,
   stiffness: 170,
@@ -180,7 +171,7 @@ export default function LoginScreen() {
     name: '',
     email: '',
     employeeId: '',
-    department: 'Computer Science & Engineering',
+    department: FALLBACK_PROGRAMS[0]?.name || 'B.Tech Computer Science & Engineering',
     designation: 'Assistant Professor',
     phone: '',
     password: '',
@@ -824,9 +815,9 @@ export default function LoginScreen() {
                         />
                       </CleanInputField>
 
-                      {/* Department Picker with Modal */}
+                      {/* Department / Program(s) Picker with Modal */}
                       <CleanInputField
-                        label="Department"
+                        label="Department / Program(s)"
                         icon={<MaterialCommunityIcons name="domain" size={18} color="#6b7c96" />}
                         required
                       >
@@ -835,8 +826,8 @@ export default function LoginScreen() {
                           onPress={() => {
                             setModalPickerConfig({
                               visible: true,
-                              title: 'Select Department',
-                              items: DEPARTMENTS,
+                              title: 'Select Department / Program(s)',
+                              items: availablePrograms.map((p) => p.name),
                               selected: tSignup.department,
                               onSelect: (item) => {
                                 setTSignup((p) => ({ ...p, department: item }));
