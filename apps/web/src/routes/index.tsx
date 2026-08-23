@@ -1,5 +1,8 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes as DomRoutes, Route as DomRoute, Navigate } from 'react-router-dom';
+
+const Routes = DomRoutes as any;
+const Route = DomRoute as any;
 import { ProtectedRoute } from './ProtectedRoute';
 import { RoleRoute } from './RoleRoute';
 import { Role } from '@tribhuvan/shared';

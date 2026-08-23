@@ -439,7 +439,7 @@ export default function LoginScreen() {
                       >
                         <TextInput
                           style={st.textInput}
-                          placeholder="e.g. EN2024001"
+                          placeholder="TEDS/NU/XXX/XX/XXX"
                           placeholderTextColor="#9ca3af"
                           value={sLogin.enrollmentNumber}
                           onChangeText={(v) => setSLogin((p) => ({ ...p, enrollmentNumber: v }))}
@@ -504,7 +504,7 @@ export default function LoginScreen() {
                       >
                         <TextInput
                           style={st.textInput}
-                          placeholder="e.g. Rahul Verma"
+                          placeholder="Name"
                           placeholderTextColor="#9ca3af"
                           value={sSignup.name}
                           onChangeText={(v) => setSSignup((p) => ({ ...p, name: v }))}
@@ -632,7 +632,7 @@ export default function LoginScreen() {
                       >
                         <TextInput
                           style={st.textInput}
-                          placeholder="e.g. EN2024001"
+                          placeholder="TEDS/NU/XXX/XX/XXX"
                           placeholderTextColor="#9ca3af"
                           autoCapitalize="characters"
                           value={sSignup.enrollmentNumber}
@@ -784,7 +784,7 @@ export default function LoginScreen() {
                       >
                         <TextInput
                           style={st.textInput}
-                          placeholder="e.g. Dr. Anil Kumar"
+                          placeholder="Name"
                           placeholderTextColor="#9ca3af"
                           value={tSignup.name}
                           onChangeText={(v) => setTSignup((p) => ({ ...p, name: v }))}
@@ -934,11 +934,10 @@ export default function LoginScreen() {
                 </View>
               </View>
 
-              {/* Secure Network Footnote */}
+              {/* Institutional Footnote */}
               <View style={st.securityFootnote}>
-                <Ionicons name="shield-checkmark-outline" size={13} color="#8a99ad" />
                 <Text style={st.securityFootnoteText}>
-                  256-Bit Encrypted Academic Network • © {new Date().getFullYear()} {COLLEGE.name}
+                  © {new Date().getFullYear()} {COLLEGE.name}. All rights reserved.
                 </Text>
               </View>
             </View>
