@@ -60,18 +60,20 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Modal pickers to completely fix the dropdown cut-off bug
+  // Modal pickers supporting single and multi-select
   const [modalPickerConfig, setModalPickerConfig] = useState<{
     visible: boolean;
     title: string;
     items: string[];
-    selected: string;
-    onSelect: (item: string) => void;
+    selected: string | string[];
+    isMultiSelect?: boolean;
+    onSelect: (item: string | string[]) => void;
   }>({
     visible: false,
     title: '',
     items: [],
     selected: '',
+    isMultiSelect: false,
     onSelect: () => {},
   });
 
@@ -517,7 +519,7 @@ export default function LoginScreen() {
                               items: availablePrograms.map((p) => p.name),
                               selected: sSignup.program,
                               onSelect: (item) => {
-                                setSSignup((p) => ({ ...p, program: item }));
+                                setSSignup((p) => ({ ...p, program: typeof item === 'string' ? item : (item[0] || '') }));
                                 setModalPickerConfig((c) => ({ ...c, visible: false }));
                               },
                             });
@@ -815,32 +817,71 @@ export default function LoginScreen() {
                         />
                       </CleanInputField>
 
-                      {/* Department / Program(s) Picker with Modal */}
+                      {/* Department / Program(s) Multi-Select Picker with Modal */}
                       <CleanInputField
                         label="Department / Program(s)"
                         icon={<MaterialCommunityIcons name="domain" size={18} color="#6b7c96" />}
                         required
                       >
                         <TouchableOpacity
-                          style={st.pickerTriggerButton}
+                          style={st.multiPickerTriggerBox}
                           onPress={() => {
+                            const selectedDepts = tSignup.department
+                              ? tSignup.department.split(',').map((s) => s.trim()).filter(Boolean)
+                              : [];
                             setModalPickerConfig({
                               visible: true,
                               title: 'Select Department / Program(s)',
                               items: availablePrograms.map((p) => p.name),
-                              selected: tSignup.department,
-                              onSelect: (item) => {
-                                setTSignup((p) => ({ ...p, department: item }));
-                                setModalPickerConfig((c) => ({ ...c, visible: false }));
+                              selected: selectedDepts,
+                              isMultiSelect: true,
+                              onSelect: (val) => {
+                                const list = Array.isArray(val) ? val : [val];
+                                setTSignup((p) => ({ ...p, department: list.join(', ') }));
                               },
                             });
                           }}
                           activeOpacity={0.7}
                         >
-                          <Text style={st.pickerTriggerText} numberOfLines={1}>
-                            {tSignup.department}
-                          </Text>
-                          <Ionicons name="chevron-down" size={18} color="#6b7c96" />
+                          <View style={st.multiPickerInner}>
+                            {(() => {
+                              const depts = tSignup.department
+                                ? tSignup.department.split(',').map((s) => s.trim()).filter(Boolean)
+                                : [];
+                              if (depts.length === 0) {
+                                return (
+                                  <Text style={st.multiPickerPlaceholder}>
+                                    Select department / program(s)...
+                                  </Text>
+                                );
+                              }
+                              return (
+                                <View style={st.selectedChipsWrap}>
+                                  {depts.map((dept) => (
+                                    <View key={dept} style={st.selectedDeptChip}>
+                                      <Text style={st.selectedDeptChipText} numberOfLines={1}>
+                                        {dept}
+                                      </Text>
+                                      <TouchableOpacity
+                                        onPress={() => {
+                                          try {
+                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                          } catch {}
+                                          const updated = depts.filter((d) => d !== dept);
+                                          setTSignup((p) => ({ ...p, department: updated.join(', ') }));
+                                        }}
+                                        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                                        style={st.chipRemoveBtn}
+                                      >
+                                        <Ionicons name="close-circle" size={15} color="#c8922a" />
+                                      </TouchableOpacity>
+                                    </View>
+                                  ))}
+                                </View>
+                              );
+                            })()}
+                          </View>
+                          <Ionicons name="chevron-down" size={18} color="#6b7c96" style={{ marginTop: 4 }} />
                         </TouchableOpacity>
                       </CleanInputField>
 
@@ -936,7 +977,7 @@ export default function LoginScreen() {
         </KeyboardAvoidingView>
 
         {/* ═══════════════════════════════════════════════════════ */}
-        {/* 4. MODAL SCROLLABLE PICKER (Solves Dropdown Cut-off)    */}
+        {/* 4. MODAL SCROLLABLE PICKER (Single & Multi-Select)      */}
         {/* ═══════════════════════════════════════════════════════ */}
         <Modal
           visible={modalPickerConfig.visible}
@@ -950,7 +991,12 @@ export default function LoginScreen() {
           >
             <Pressable style={st.modalContent} onPress={(e) => e.stopPropagation()}>
               <View style={st.modalHeader}>
-                <Text style={st.modalTitleText}>{modalPickerConfig.title}</Text>
+                <View style={{ flex: 1, marginRight: 8 }}>
+                  <Text style={st.modalTitleText}>{modalPickerConfig.title}</Text>
+                  {modalPickerConfig.isMultiSelect && (
+                    <Text style={st.modalSubtitleText}>Select one or more departments/programs</Text>
+                  )}
+                </View>
                 <TouchableOpacity
                   style={st.modalCloseBtn}
                   onPress={() => setModalPickerConfig((c) => ({ ...c, visible: false }))}
@@ -966,12 +1012,38 @@ export default function LoginScreen() {
                 keyboardShouldPersistTaps="handled"
               >
                 {modalPickerConfig.items.map((item) => {
-                  const isSelected = item === modalPickerConfig.selected;
+                  const isSelected = Array.isArray(modalPickerConfig.selected)
+                    ? modalPickerConfig.selected.includes(item)
+                    : modalPickerConfig.selected === item;
+
+                  const handleItemPress = () => {
+                    try {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    } catch {}
+                    if (modalPickerConfig.isMultiSelect) {
+                      const current = Array.isArray(modalPickerConfig.selected)
+                        ? [...modalPickerConfig.selected]
+                        : modalPickerConfig.selected
+                        ? [modalPickerConfig.selected]
+                        : [];
+                      const updated = isSelected
+                        ? current.filter((i) => i !== item)
+                        : [...current, item];
+                      setModalPickerConfig((prev) => ({
+                        ...prev,
+                        selected: updated,
+                      }));
+                      modalPickerConfig.onSelect(updated);
+                    } else {
+                      modalPickerConfig.onSelect(item);
+                    }
+                  };
+
                   return (
                     <TouchableOpacity
                       key={item}
                       style={[st.modalListItem, isSelected && st.modalListItemActive]}
-                      onPress={() => modalPickerConfig.onSelect(item)}
+                      onPress={handleItemPress}
                       activeOpacity={0.7}
                     >
                       <Text
@@ -982,13 +1054,35 @@ export default function LoginScreen() {
                       >
                         {item}
                       </Text>
-                      {isSelected && (
-                        <Ionicons name="checkmark-circle" size={18} color="#c8922a" />
+                      {modalPickerConfig.isMultiSelect ? (
+                        <Ionicons
+                          name={isSelected ? 'checkbox' : 'square-outline'}
+                          size={20}
+                          color={isSelected ? '#c8922a' : '#8a99ad'}
+                        />
+                      ) : (
+                        isSelected && (
+                          <Ionicons name="checkmark-circle" size={18} color="#c8922a" />
+                        )
                       )}
                     </TouchableOpacity>
                   );
                 })}
               </ScrollView>
+
+              {modalPickerConfig.isMultiSelect && (
+                <View style={st.modalFooter}>
+                  <TouchableOpacity
+                    style={st.modalDoneButton}
+                    onPress={() => setModalPickerConfig((c) => ({ ...c, visible: false }))}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={st.modalDoneButtonText}>
+                      Done ({Array.isArray(modalPickerConfig.selected) ? modalPickerConfig.selected.length : 1} Selected)
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </Pressable>
           </Pressable>
         </Modal>
@@ -1618,5 +1712,72 @@ const st = StyleSheet.create({
   modalListItemTextActive: {
     color: '#c8922a',
     fontWeight: '800',
+  },
+  modalSubtitleText: {
+    fontSize: 11,
+    color: '#6b7c96',
+    marginTop: 2,
+  },
+  modalFooter: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f0ece4',
+  },
+  modalDoneButton: {
+    backgroundColor: '#0d1f3c',
+    borderRadius: 14,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalDoneButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+
+  // ── MULTI-PICKER TRIGGER & CHIPS ──
+  multiPickerTriggerBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    minHeight: 48,
+  },
+  multiPickerInner: {
+    flex: 1,
+    marginRight: 8,
+  },
+  multiPickerPlaceholder: {
+    fontSize: 13.5,
+    color: '#9ca3af',
+    paddingVertical: 4,
+  },
+  selectedChipsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  selectedDeptChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#0d1f3c',
+    borderRadius: 8,
+    paddingLeft: 9,
+    paddingRight: 6,
+    paddingVertical: 5,
+    gap: 5,
+    maxWidth: '100%',
+  },
+  selectedDeptChipText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#f8f5ee',
+    flexShrink: 1,
+  },
+  chipRemoveBtn: {
+    padding: 1,
   },
 });
