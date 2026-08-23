@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,23 +12,16 @@ import {
   ActivityIndicator,
   StatusBar,
   Pressable,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { LinearGradient as ExpoLinearGradient } from 'expo-linear-gradient';
-import { BlurView as ExpoBlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
-
-const LinearGradient = ExpoLinearGradient as any;
-const BlurView = ExpoBlurView as any;
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
   withTiming,
-  withSequence,
-  withDelay,
-  withRepeat,
   interpolate,
   useReducedMotion,
   Easing,
@@ -53,17 +46,10 @@ const DEPARTMENTS = [
   'Civil & Environmental Engineering',
 ];
 
-// Tuned physical spring configurations
-const SPRING_SNAPPY = {
-  damping: 16,
-  stiffness: 180,
+const SPRING_CONFIG = {
+  damping: 18,
+  stiffness: 170,
   mass: 0.8,
-};
-
-const SPRING_BOUNCE = {
-  damping: 12,
-  stiffness: 150,
-  mass: 0.75,
 };
 
 export default function LoginScreen() {
@@ -71,7 +57,7 @@ export default function LoginScreen() {
   const { setSession } = useAuth();
   const prefersReducedMotion = useReducedMotion();
 
-  // ── Form & UI States ──
+  // ── States ──
   const [role, setRole] = useState<RoleType>('STUDENT');
   const [activeTab, setActiveTab] = useState<TabType>('LOGIN');
   const [availablePrograms, setAvailablePrograms] = useState<{ name: string; code: string }[]>(FALLBACK_PROGRAMS);
@@ -82,107 +68,32 @@ export default function LoginScreen() {
   const [pendingNotice, setPendingNotice] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showProgramPicker, setShowProgramPicker] = useState(false);
-  const [showDeptPicker, setShowDeptPicker] = useState(false);
 
-  // Stagger cycle token for re-triggering entrance transitions
+  // Modal pickers to completely fix the dropdown cut-off bug
+  const [modalPickerConfig, setModalPickerConfig] = useState<{
+    visible: boolean;
+    title: string;
+    items: string[];
+    selected: string;
+    onSelect: (item: string) => void;
+  }>({
+    visible: false,
+    title: '',
+    items: [],
+    selected: '',
+    onSelect: () => {},
+  });
+
+  // Animation cycle & direction for clean scene transitions
   const [animationCycle, setAnimationCycle] = useState(0);
-  const [transitionDirection, setTransitionDirection] = useState<'toRight' | 'toLeft'>('toLeft');
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
 
-  // ── Ambient Background Glow Shared Values ──
-  const orb1X = useSharedValue(0);
-  const orb1Y = useSharedValue(0);
-  const orb1Opacity = useSharedValue(0.28);
-
-  const orb2X = useSharedValue(0);
-  const orb2Y = useSharedValue(0);
-  const orb2Opacity = useSharedValue(0.35);
-
-  const orb3Scale = useSharedValue(1);
-
-  // ── UI Micro-Motion Shared Values ──
+  // Shared values
   const roleToggleX = useSharedValue(0);
-  const roleSquashX = useSharedValue(1);
-  const roleSquashY = useSharedValue(1);
-  const roleIconRotate = useSharedValue(0);
+  const emblemScale = useSharedValue(1);
+  const emblemOpacity = useSharedValue(1);
 
-  const tabToggleX = useSharedValue(0);
-  const sealScale = useSharedValue(1);
-  const sealRotate = useSharedValue(0);
-  const formOpacity = useSharedValue(1);
-
-  // ── Ambient Background Orb Animations ──
-  useEffect(() => {
-    if (prefersReducedMotion) return;
-
-    // Gold/Amber Orb 1 looping drift
-    orb1X.value = withRepeat(
-      withSequence(
-        withTiming(45, { duration: 9000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-30, { duration: 11000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 8000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    );
-    orb1Y.value = withRepeat(
-      withSequence(
-        withTiming(-35, { duration: 8500, easing: Easing.inOut(Easing.sin) }),
-        withTiming(40, { duration: 10500, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 9000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    );
-    orb1Opacity.value = withRepeat(
-      withSequence(
-        withTiming(0.42, { duration: 6000 }),
-        withTiming(0.22, { duration: 7000 })
-      ),
-      -1,
-      true
-    );
-
-    // Sapphire/Navy Orb 2 looping drift
-    orb2X.value = withRepeat(
-      withSequence(
-        withTiming(-40, { duration: 10000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(35, { duration: 12000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 9500, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    );
-    orb2Y.value = withRepeat(
-      withSequence(
-        withTiming(30, { duration: 9500, easing: Easing.inOut(Easing.sin) }),
-        withTiming(-45, { duration: 11500, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 8500, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    );
-    orb2Opacity.value = withRepeat(
-      withSequence(
-        withTiming(0.55, { duration: 7500 }),
-        withTiming(0.32, { duration: 8500 })
-      ),
-      -1,
-      true
-    );
-
-    // Jewel Teal Orb 3 subtle pulse
-    orb3Scale.value = withRepeat(
-      withSequence(
-        withTiming(1.22, { duration: 7000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0.92, { duration: 7000, easing: Easing.inOut(Easing.sin) })
-      ),
-      -1,
-      true
-    );
-  }, [prefersReducedMotion]);
-
-  // Fetch dynamic programs
+  // Load programs from API
   useEffect(() => {
     api.get('/programs')
       .then((res) => {
@@ -190,58 +101,30 @@ export default function LoginScreen() {
           setAvailablePrograms(res.data.data);
         }
       })
-      .catch(() => {
-        // Fallback gracefully to default shared list
-      });
+      .catch(() => {});
   }, []);
 
-  // ── Role Switch Handler with Elastic Squash/Stretch & Haptics ──
+  // ── Role Switcher ──
   const handleRoleChange = (newRole: RoleType) => {
     if (newRole === role) return;
 
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {
-      // Haptics fallback gracefully
-    }
+    } catch {}
 
-    const isTargetTeacher = newRole === 'TEACHER';
-    setTransitionDirection(isTargetTeacher ? 'toRight' : 'toLeft');
+    const isTeacher = newRole === 'TEACHER';
+    setSlideDirection(isTeacher ? 'left' : 'right');
 
     if (!prefersReducedMotion) {
-      // 1. Elastic squash-and-stretch on the pill shape during motion
-      roleSquashX.value = withSequence(
-        withTiming(1.16, { duration: 110, easing: Easing.out(Easing.quad) }),
-        withSpring(1, SPRING_SNAPPY)
-      );
-      roleSquashY.value = withSequence(
-        withTiming(0.92, { duration: 110, easing: Easing.out(Easing.quad) }),
-        withSpring(1, SPRING_SNAPPY)
-      );
-
-      roleToggleX.value = withSpring(isTargetTeacher ? 1 : 0, SPRING_SNAPPY);
-      roleIconRotate.value = withSequence(
-        withTiming(isTargetTeacher ? 15 : -15, { duration: 130 }),
-        withSpring(0, SPRING_BOUNCE)
-      );
-
-      // 2. Coordinated Seal Glow & Pulse
-      sealScale.value = withSequence(
-        withTiming(1.12, { duration: 140 }),
-        withSpring(1, SPRING_BOUNCE)
-      );
-      sealRotate.value = withSequence(
-        withTiming(isTargetTeacher ? 10 : -10, { duration: 140 }),
-        withSpring(0, SPRING_BOUNCE)
-      );
-
-      // 3. Smooth Form Cross-Fade
-      formOpacity.value = withSequence(
-        withTiming(0.15, { duration: 90 }),
-        withTiming(1, { duration: 220 })
-      );
+      roleToggleX.value = withSpring(isTeacher ? 1 : 0, SPRING_CONFIG);
+      emblemScale.value = withTiming(0.92, { duration: 120 }, () => {
+        emblemScale.value = withTiming(1, { duration: 180, easing: Easing.out(Easing.cubic) });
+      });
+      emblemOpacity.value = withTiming(0.7, { duration: 120 }, () => {
+        emblemOpacity.value = withTiming(1, { duration: 180 });
+      });
     } else {
-      roleToggleX.value = isTargetTeacher ? 1 : 0;
+      roleToggleX.value = isTeacher ? 1 : 0;
     }
 
     setRole(newRole);
@@ -251,27 +134,21 @@ export default function LoginScreen() {
     setPendingNotice(null);
   };
 
-  // ── Tab Switch Handler with Haptics ──
+  // ── Tab Switcher (Sign In ⟷ Sign Up) ──
   const handleTabChange = (newTab: TabType) => {
     if (newTab === activeTab) return;
 
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {
-      // Haptics fallback
-    }
+    } catch {}
 
     const isSignup = newTab === 'SIGNUP';
-    setTransitionDirection(isSignup ? 'toRight' : 'toLeft');
+    setSlideDirection(isSignup ? 'left' : 'right');
 
     if (!prefersReducedMotion) {
-      tabToggleX.value = withSpring(isSignup ? 1 : 0, SPRING_SNAPPY);
-      formOpacity.value = withSequence(
-        withTiming(0.15, { duration: 90 }),
-        withTiming(1, { duration: 200 })
-      );
-    } else {
-      tabToggleX.value = isSignup ? 1 : 0;
+      emblemScale.value = withTiming(0.95, { duration: 100 }, () => {
+        emblemScale.value = withTiming(1, { duration: 160 });
+      });
     }
 
     setActiveTab(newTab);
@@ -281,7 +158,7 @@ export default function LoginScreen() {
     setPendingNotice(null);
   };
 
-  // ── Form Input States ──
+  // ── Form Input State ──
   const [sLogin, setSLogin] = useState({ enrollmentNumber: '', password: '' });
   const [sSignup, setSSignup] = useState({
     name: '',
@@ -313,7 +190,7 @@ export default function LoginScreen() {
   // ── Auth Actions ──
   const doStudentLogin = async () => {
     if (!sLogin.enrollmentNumber.trim() || !sLogin.password) {
-      setError('Please fill in your Enrollment Number and Password.');
+      setError('Please enter your Enrollment Number and Password.');
       return;
     }
     setLoading(true);
@@ -406,122 +283,26 @@ export default function LoginScreen() {
   };
 
   const isStudent = role === 'STUDENT';
-  const SWITCHER_PADDING = 4;
-  const SWITCHER_WIDTH = SCREEN_WIDTH - 44;
-  const PILL_WIDTH = (SWITCHER_WIDTH - SWITCHER_PADDING * 2) / 2;
+  const isLogin = activeTab === 'LOGIN';
+  const SWITCHER_WIDTH = SCREEN_WIDTH - 48;
+  const PILL_WIDTH = (SWITCHER_WIDTH - 8) / 2;
 
-  // ── Animated Background Glow Styles ──
-  const orb1AnimStyle = useAnimatedStyle(() => ({
-    opacity: orb1Opacity.value,
-    transform: [
-      { translateX: orb1X.value },
-      { translateY: orb1Y.value },
-    ],
-  }));
-
-  const orb2AnimStyle = useAnimatedStyle(() => ({
-    opacity: orb2Opacity.value,
-    transform: [
-      { translateX: orb2X.value },
-      { translateY: orb2Y.value },
-    ],
-  }));
-
-  const orb3AnimStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: orb3Scale.value }],
-  }));
-
-  // ── Animated UI Element Styles ──
-  const sealAnimStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: sealScale.value },
-      { rotate: `${sealRotate.value}deg` },
-    ],
+  // Animated Styles
+  const emblemAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: emblemScale.value }],
+    opacity: emblemOpacity.value,
   }));
 
   const rolePillStyle = useAnimatedStyle(() => {
-    const translateX = interpolate(
-      roleToggleX.value,
-      [0, 1],
-      [0, PILL_WIDTH]
-    );
-    return {
-      transform: [
-        { translateX },
-        { scaleX: roleSquashX.value },
-        { scaleY: roleSquashY.value },
-      ],
-    };
-  });
-
-  const tabIndicatorStyle = useAnimatedStyle(() => {
-    const tabWidth = (SCREEN_WIDTH - 44) / 2;
-    const translateX = interpolate(tabToggleX.value, [0, 1], [0, tabWidth]);
+    const translateX = interpolate(roleToggleX.value, [0, 1], [0, PILL_WIDTH]);
     return {
       transform: [{ translateX }],
     };
   });
 
-  const formWrapAnimStyle = useAnimatedStyle(() => ({
-    opacity: formOpacity.value,
-  }));
-
   return (
     <View style={st.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#050e1d" />
-
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {/* 1. ANIMATED DEPTH AMBIENT BACKGROUND MESH LAYER            */}
-      {/* ═══════════════════════════════════════════════════════════ */}
-      <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
-        {/* Base dark canvas gradient */}
-        <LinearGradient
-          colors={['#061022', '#09162e', '#050e1d']}
-          style={StyleSheet.absoluteFillObject}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-
-        {/* Floating Drifting Orb 1: Warm Brass-Gold Glow (Top Right) */}
-        <AnimatedView style={[st.ambientOrb1, orb1AnimStyle]}>
-          <LinearGradient
-            colors={['rgba(200, 146, 42, 0.45)', 'rgba(200, 146, 42, 0.0)']}
-            style={StyleSheet.absoluteFillObject}
-            start={{ x: 0.5, y: 0.5 }}
-            end={{ x: 1, y: 1 }}
-          />
-        </AnimatedView>
-
-        {/* Floating Drifting Orb 2: Deep Midnight Sapphire Glow (Mid Left) */}
-        <AnimatedView style={[st.ambientOrb2, orb2AnimStyle]}>
-          <LinearGradient
-            colors={['rgba(30, 64, 175, 0.55)', 'rgba(30, 64, 175, 0.0)']}
-            style={StyleSheet.absoluteFillObject}
-            start={{ x: 0.5, y: 0.5 }}
-            end={{ x: 1, y: 1 }}
-          />
-        </AnimatedView>
-
-        {/* Floating Drifting Orb 3: Subtle Jewel Emerald Accent (Bottom Center) */}
-        <AnimatedView style={[st.ambientOrb3, orb3AnimStyle]}>
-          <LinearGradient
-            colors={['rgba(13, 148, 136, 0.25)', 'rgba(13, 148, 136, 0.0)']}
-            style={StyleSheet.absoluteFillObject}
-            start={{ x: 0.5, y: 0.5 }}
-            end={{ x: 1, y: 1 }}
-          />
-        </AnimatedView>
-
-        {/* Fine Starburst / Grid Watermark */}
-        <View style={st.watermarkRings}>
-          <View style={st.watermarkRingOuter} />
-          <View style={st.watermarkRingInner} />
-        </View>
-      </View>
-
-      {/* ═══════════════════════════════════════════════════════════ */}
-      {/* 2. MAIN SCROLLABLE CONTENT WITH FROSTED GLASS CARDS         */}
-      {/* ═══════════════════════════════════════════════════════════ */}
+      <StatusBar barStyle="dark-content" backgroundColor="#f8f5ee" />
       <SafeAreaView style={st.safeArea} edges={['top', 'left', 'right']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -533,818 +314,745 @@ export default function LoginScreen() {
             showsVerticalScrollIndicator={false}
             bounces={true}
           >
-            {/* ─── INSTITUTIONAL HERO HEADER ─── */}
-            <View style={st.headerContainer}>
-              {/* Top Jewel Hairline */}
-              <View style={st.topAccentBar}>
-                <View style={st.accentNavy} />
-                <LinearGradient
-                  colors={['#dfa943', '#c8922a', '#9a6b18']}
-                  style={st.accentGold}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                />
-                <View style={st.accentNavy} />
-              </View>
-
-              {/* Concentric Crest Emblem with Dual Gold Rings */}
-              <AnimatedView style={[st.crestOuterRing, sealAnimStyle]}>
-                <LinearGradient
-                  colors={['rgba(200, 146, 42, 0.25)', 'rgba(200, 146, 42, 0.05)']}
-                  style={st.crestGlowBackdrop}
-                />
-                <View style={st.crestMidRing}>
-                  <LinearGradient
-                    colors={['#172a4d', '#0d1f3c']}
-                    style={st.crestCore}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* 1. TOP HEADER & ACADEMIC EMBLEM                         */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <View style={st.headerSection}>
+              {/* Confident Academic Crest with real visual presence */}
+              <AnimatedView style={[st.emblemOuter, emblemAnimStyle]}>
+                <View style={st.emblemRing}>
+                  <View style={st.emblemCore}>
                     {isStudent ? (
-                      <MaterialCommunityIcons name="school" size={28} color="#dfa943" />
+                      <MaterialCommunityIcons name="school" size={34} color="#c8922a" />
                     ) : (
-                      <MaterialCommunityIcons name="account-tie" size={28} color="#dfa943" />
+                      <MaterialCommunityIcons name="account-tie" size={34} color="#c8922a" />
                     )}
-                  </LinearGradient>
+                  </View>
                 </View>
-                {/* Micro compass diamonds */}
-                <View style={st.sealDotTop} />
-                <View style={st.sealDotBottom} />
-                <View style={st.sealDotLeft} />
-                <View style={st.sealDotRight} />
+                {/* Diamond Compass Accents */}
+                <View style={st.emblemStarTop} />
+                <View style={st.emblemStarBottom} />
               </AnimatedView>
 
-              {/* College Title Wordmark */}
-              <Text style={st.collegeTitle}>{COLLEGE.name}</Text>
+              {/* Institution Subtitle */}
+              <Text style={st.collegeBrandText}>{COLLEGE.name}</Text>
 
-              {/* Fine Diamond Academic Divider */}
-              <View style={st.diamondDivider}>
-                <LinearGradient
-                  colors={['transparent', 'rgba(200, 146, 42, 0.6)']}
-                  style={st.diamondLine}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                />
-                <View style={st.diamondShape} />
-                <Text style={st.portalTag}>INSTITUTIONAL GATEWAY</Text>
-                <View style={st.diamondShape} />
-                <LinearGradient
-                  colors={['rgba(200, 146, 42, 0.6)', 'transparent']}
-                  style={st.diamondLine}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                />
-              </View>
-
-              <Text style={st.headerSubtitle}>
-                {isStudent
-                  ? 'Student Academic & Examination Portal'
-                  : 'Faculty & Departmental Management System'}
+              {/* State Heading (e.g., "Student Log In" / "Create Account") */}
+              <Text style={st.mainHeadingText}>
+                {isLogin
+                  ? isStudent
+                    ? 'Student Log In'
+                    : 'Faculty Log In'
+                  : isStudent
+                  ? 'Student Sign Up'
+                  : 'Faculty Sign Up'}
               </Text>
 
-              {/* ─── TACTILE NEUMORPHIC ROLE TOGGLE (STUDENT / FACULTY) ─── */}
-              <View style={[st.switcherContainer, { width: SWITCHER_WIDTH }]}>
-                {/* Subtle outer glow on container */}
-                <View style={st.switcherTrack}>
-                  {/* Sliding Elastic Spring Pill */}
-                  <AnimatedView
-                    style={[
-                      st.switcherPill,
-                      { width: PILL_WIDTH },
-                      rolePillStyle,
-                    ]}
-                  >
-                    <LinearGradient
-                      colors={['#dfa943', '#c8922a', '#a8741e']}
-                      style={st.switcherPillGradient}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
+              <Text style={st.mainSubheadText}>
+                {isLogin
+                  ? isStudent
+                    ? 'Welcome back! Enter your details to continue.'
+                    : 'Sign in to your departmental portal.'
+                  : isStudent
+                  ? 'Join Tribhuvan College academic community.'
+                  : 'Apply for departmental faculty credentials.'}
+              </Text>
+
+              {/* ─── ROLE TOGGLE PILL (Student / Faculty) ─── */}
+              <View style={[st.roleSwitcherTrack, { width: SWITCHER_WIDTH }]}>
+                {/* Sliding active pill indicator */}
+                <AnimatedView
+                  style={[
+                    st.roleSwitcherPill,
+                    { width: PILL_WIDTH },
+                    rolePillStyle,
+                  ]}
+                />
+
+                {/* Student Tab */}
+                <Pressable
+                  style={st.roleSwitcherButton}
+                  onPress={() => handleRoleChange('STUDENT')}
+                >
+                  <View style={st.roleButtonInner}>
+                    <MaterialCommunityIcons
+                      name="school-outline"
+                      size={18}
+                      color={isStudent ? '#ffffff' : '#526079'}
+                    />
+                    <Text
+                      style={[
+                        st.roleButtonText,
+                        isStudent && st.roleButtonTextActive,
+                      ]}
                     >
-                      {/* Top highlight line for 3D metallic feel */}
-                      <View style={st.switcherPillHighlight} />
-                    </LinearGradient>
-                  </AnimatedView>
+                      Student
+                    </Text>
+                  </View>
+                </Pressable>
 
-                  {/* Student Segment Button */}
-                  <Pressable
-                    style={st.switcherButton}
-                    onPress={() => handleRoleChange('STUDENT')}
-                  >
-                    <View style={st.switcherButtonInner}>
-                      <MaterialCommunityIcons
-                        name="school-outline"
-                        size={18}
-                        color={isStudent ? '#091529' : 'rgba(240, 236, 228, 0.7)'}
-                      />
-                      <Text
-                        style={[
-                          st.switcherLabel,
-                          isStudent && st.switcherLabelActive,
-                        ]}
-                      >
-                        Student
-                      </Text>
-                    </View>
-                  </Pressable>
-
-                  {/* Faculty Segment Button */}
-                  <Pressable
-                    style={st.switcherButton}
-                    onPress={() => handleRoleChange('TEACHER')}
-                  >
-                    <View style={st.switcherButtonInner}>
-                      <MaterialCommunityIcons
-                        name="briefcase-account-outline"
-                        size={18}
-                        color={!isStudent ? '#091529' : 'rgba(240, 236, 228, 0.7)'}
-                      />
-                      <Text
-                        style={[
-                          st.switcherLabel,
-                          !isStudent && st.switcherLabelActive,
-                        ]}
-                      >
-                        Faculty
-                      </Text>
-                    </View>
-                  </Pressable>
-                </View>
+                {/* Faculty Tab */}
+                <Pressable
+                  style={st.roleSwitcherButton}
+                  onPress={() => handleRoleChange('TEACHER')}
+                >
+                  <View style={st.roleButtonInner}>
+                    <MaterialCommunityIcons
+                      name="briefcase-account-outline"
+                      size={18}
+                      color={!isStudent ? '#ffffff' : '#526079'}
+                    />
+                    <Text
+                      style={[
+                        st.roleButtonText,
+                        !isStudent && st.roleButtonTextActive,
+                      ]}
+                    >
+                      Faculty
+                    </Text>
+                  </View>
+                </Pressable>
               </View>
             </View>
 
-            {/* ═══════════════════════════════════════════════════════════ */}
-            {/* 3. FROSTED GLASS FLOATING CARD WITH INNER GRADIENT BORDER   */}
-            {/* ═══════════════════════════════════════════════════════════ */}
-            <View style={st.glassCardWrapper}>
-              {/* Outer Card Gradient Border Container */}
-              <LinearGradient
-                colors={['rgba(200, 146, 42, 0.45)', 'rgba(255, 255, 255, 0.12)', 'rgba(13, 31, 60, 0.5)']}
-                style={st.cardBorderGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                {/* Frosted Glass Background */}
-                <BlurView intensity={Platform.OS === 'ios' ? 45 : 90} tint="dark" style={st.cardBlur}>
-                  <View style={st.cardContentInner}>
-                    {/* Tab Navigation: Sign In / New Registration */}
-                    <View style={st.tabBarContainer}>
-                      <TouchableOpacity
-                        style={st.tabItem}
-                        onPress={() => handleTabChange('LOGIN')}
-                        activeOpacity={0.8}
-                      >
-                        <Text
-                          style={[
-                            st.tabItemText,
-                            activeTab === 'LOGIN' && st.tabItemTextActive,
-                          ]}
-                        >
-                          Sign In
-                        </Text>
-                      </TouchableOpacity>
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* 2. CLEAN WHITE FORM PANEL                               */}
+            {/* ═══════════════════════════════════════════════════════ */}
+            <View style={st.formCardWrapper}>
+              <View style={st.formCard}>
+                {/* Single Clean Scene Transition */}
+                <SceneTransition cycle={animationCycle} direction={slideDirection}>
+                  {/* Status Banners */}
+                  {error && <CleanAlertBanner type="error" message={error} />}
+                  {successMsg && <CleanAlertBanner type="success" message={successMsg} />}
+                  {pendingNotice && <CleanAlertBanner type="pending" message={pendingNotice} />}
 
-                      <TouchableOpacity
-                        style={st.tabItem}
-                        onPress={() => handleTabChange('SIGNUP')}
-                        activeOpacity={0.8}
+                  {/* ──────────────────────────────────────────────── */}
+                  {/* 1. STUDENT LOGIN FORM                            */}
+                  {/* ──────────────────────────────────────────────── */}
+                  {isStudent && isLogin && (
+                    <View style={st.formGroup}>
+                      <CleanInputField
+                        label="Enrollment Number"
+                        icon={<MaterialCommunityIcons name="card-account-details-outline" size={18} color="#6b7c96" />}
+                        required
                       >
-                        <Text
-                          style={[
-                            st.tabItemText,
-                            activeTab === 'SIGNUP' && st.tabItemTextActive,
-                          ]}
-                        >
-                          New Registration
-                        </Text>
-                      </TouchableOpacity>
-
-                      {/* Animated Gold Tab Underline */}
-                      <AnimatedView
-                        style={[
-                          st.tabActiveIndicator,
-                          { width: (SCREEN_WIDTH - 44) / 2 },
-                          tabIndicatorStyle,
-                        ]}
-                      >
-                        <LinearGradient
-                          colors={['#dfa943', '#c8922a']}
-                          style={st.tabIndicatorBar}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
+                        <TextInput
+                          style={st.textInput}
+                          placeholder="e.g. EN2024001"
+                          placeholderTextColor="#9ca3af"
+                          value={sLogin.enrollmentNumber}
+                          onChangeText={(v) => setSLogin((p) => ({ ...p, enrollmentNumber: v }))}
+                          autoCapitalize="characters"
+                          autoCorrect={false}
                         />
-                      </AnimatedView>
-                    </View>
+                      </CleanInputField>
 
-                    {/* ─── STAGGERED FORM TRANSITIONS ─── */}
-                    <AnimatedView style={[st.formBody, formWrapAnimStyle]}>
-                      {/* Status & Feedback Alerts */}
-                      {error && (
-                        <StaggeredItem index={0} cycle={animationCycle} direction={transitionDirection}>
-                          <AlertBanner type="error" message={error} />
-                        </StaggeredItem>
-                      )}
-                      {successMsg && (
-                        <StaggeredItem index={0} cycle={animationCycle} direction={transitionDirection}>
-                          <AlertBanner type="success" message={successMsg} />
-                        </StaggeredItem>
-                      )}
-                      {pendingNotice && (
-                        <StaggeredItem index={0} cycle={animationCycle} direction={transitionDirection}>
-                          <AlertBanner type="pending" message={pendingNotice} />
-                        </StaggeredItem>
-                      )}
-
-                      {/* ═════════════════════════════════════════════ */}
-                      {/* 1. STUDENT LOGIN FORM                         */}
-                      {/* ═════════════════════════════════════════════ */}
-                      {isStudent && activeTab === 'LOGIN' && (
-                        <>
-                          <StaggeredItem index={1} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Enrollment Number"
-                              icon={<MaterialCommunityIcons name="card-account-details-outline" size={17} color="#a6b7d4" />}
-                              required
-                            >
-                              <TextInput
-                                style={st.inputField}
-                                placeholder="e.g. EN2024001"
-                                placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                value={sLogin.enrollmentNumber}
-                                onChangeText={(v) => setSLogin((p) => ({ ...p, enrollmentNumber: v }))}
-                                autoCapitalize="characters"
-                                autoCorrect={false}
-                              />
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={2} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Password"
-                              icon={<Ionicons name="lock-closed-outline" size={17} color="#a6b7d4" />}
-                              required
-                              rightHeaderEl={
-                                <TouchableOpacity
-                                  onPress={() => setError('Please contact the College IT Helpdesk for password assistance.')}
-                                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                                >
-                                  <Text style={st.forgotText}>Forgot?</Text>
-                                </TouchableOpacity>
-                              }
-                            >
-                              <View style={st.passwordInputRow}>
-                                <TextInput
-                                  style={[st.inputField, { flex: 1, borderWidth: 0 }]}
-                                  placeholder="••••••••"
-                                  placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                  secureTextEntry={!showPassword}
-                                  value={sLogin.password}
-                                  onChangeText={(v) => setSLogin((p) => ({ ...p, password: v }))}
-                                />
-                                <TouchableOpacity
-                                  onPress={() => setShowPassword((v) => !v)}
-                                  style={st.eyeButton}
-                                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                >
-                                  <Ionicons
-                                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                                    size={18}
-                                    color="#a6b7d4"
-                                  />
-                                </TouchableOpacity>
-                              </View>
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={3} cycle={animationCycle} direction={transitionDirection}>
-                            <TactilePrimaryButton
-                              title="Sign In to Student Portal"
-                              onPress={doStudentLogin}
-                              loading={loading}
+                      <CleanInputField
+                        label="Password"
+                        icon={<Ionicons name="lock-closed-outline" size={18} color="#6b7c96" />}
+                        required
+                        rightHeaderEl={
+                          <TouchableOpacity
+                            onPress={() => setError('Please contact the College IT Helpdesk for password assistance.')}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
+                            <Text style={st.forgotLink}>Forgot password?</Text>
+                          </TouchableOpacity>
+                        }
+                      >
+                        <View style={st.passwordRow}>
+                          <TextInput
+                            style={[st.textInput, { flex: 1 }]}
+                            placeholder="••••••••"
+                            placeholderTextColor="#9ca3af"
+                            secureTextEntry={!showPassword}
+                            value={sLogin.password}
+                            onChangeText={(v) => setSLogin((p) => ({ ...p, password: v }))}
+                          />
+                          <TouchableOpacity
+                            onPress={() => setShowPassword((v) => !v)}
+                            style={st.eyeIconButton}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          >
+                            <Ionicons
+                              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                              size={19}
+                              color="#6b7c96"
                             />
-                          </StaggeredItem>
-                        </>
-                      )}
+                          </TouchableOpacity>
+                        </View>
+                      </CleanInputField>
 
-                      {/* ═════════════════════════════════════════════ */}
-                      {/* 2. STUDENT SIGNUP FORM                        */}
-                      {/* ═════════════════════════════════════════════ */}
-                      {isStudent && activeTab === 'SIGNUP' && (
-                        <>
-                          <StaggeredItem index={1} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Full Name"
-                              icon={<Ionicons name="person-outline" size={17} color="#a6b7d4" />}
-                              required
-                            >
-                              <TextInput
-                                style={st.inputField}
-                                placeholder="e.g. Rahul Verma"
-                                placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                value={sSignup.name}
-                                onChangeText={(v) => setSSignup((p) => ({ ...p, name: v }))}
-                              />
-                            </GlassInputField>
-                          </StaggeredItem>
+                      <CleanPillButton
+                        title="Log In"
+                        onPress={doStudentLogin}
+                        loading={loading}
+                      />
+                    </View>
+                  )}
 
-                          <StaggeredItem index={2} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Academic Programme"
-                              icon={<Ionicons name="book-outline" size={17} color="#a6b7d4" />}
-                              required
-                            >
+                  {/* ──────────────────────────────────────────────── */}
+                  {/* 2. STUDENT SIGNUP FORM                           */}
+                  {/* ──────────────────────────────────────────────── */}
+                  {isStudent && !isLogin && (
+                    <View style={st.formGroup}>
+                      <CleanInputField
+                        label="Full Name"
+                        icon={<Ionicons name="person-outline" size={18} color="#6b7c96" />}
+                        required
+                      >
+                        <TextInput
+                          style={st.textInput}
+                          placeholder="e.g. Rahul Verma"
+                          placeholderTextColor="#9ca3af"
+                          value={sSignup.name}
+                          onChangeText={(v) => setSSignup((p) => ({ ...p, name: v }))}
+                        />
+                      </CleanInputField>
+
+                      {/* Program Picker with Modal (Zero Cut-Offs) */}
+                      <CleanInputField
+                        label="Academic Program"
+                        icon={<Ionicons name="book-outline" size={18} color="#6b7c96" />}
+                        required
+                      >
+                        <TouchableOpacity
+                          style={st.pickerTriggerButton}
+                          onPress={() => {
+                            setModalPickerConfig({
+                              visible: true,
+                              title: 'Select Academic Program',
+                              items: availablePrograms.map((p) => p.name),
+                              selected: sSignup.program,
+                              onSelect: (item) => {
+                                setSSignup((p) => ({ ...p, program: item }));
+                                setModalPickerConfig((c) => ({ ...c, visible: false }));
+                              },
+                            });
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={st.pickerTriggerText} numberOfLines={1}>
+                            {sSignup.program}
+                          </Text>
+                          <Ionicons name="chevron-down" size={18} color="#6b7c96" />
+                        </TouchableOpacity>
+                      </CleanInputField>
+
+                      {/* Year & Semester Grid - Completely accessible & bug-free */}
+                      <View style={st.dualSelectorRow}>
+                        <View style={st.dualCol}>
+                          <Text style={st.miniColLabel}>ACADEMIC YEAR *</Text>
+                          <View style={st.chipsRow}>
+                            {[1, 2, 3, 4].map((y) => (
                               <TouchableOpacity
-                                style={st.selectButton}
-                                onPress={() => setShowProgramPicker((v) => !v)}
-                                activeOpacity={0.7}
+                                key={y}
+                                style={[
+                                  st.yearChip,
+                                  sSignup.year === y && st.yearChipActive,
+                                ]}
+                                onPress={() => {
+                                  try {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                  } catch {}
+                                  setSSignup((p) => ({ ...p, year: y }));
+                                }}
+                                activeOpacity={0.75}
                               >
-                                <Text style={st.selectButtonText} numberOfLines={1}>
-                                  {sSignup.program}
+                                <Text
+                                  style={[
+                                    st.yearChipText,
+                                    sSignup.year === y && st.yearChipTextActive,
+                                  ]}
+                                >
+                                  Y{y}
                                 </Text>
-                                <Ionicons
-                                  name={showProgramPicker ? 'chevron-up' : 'chevron-down'}
-                                  size={16}
-                                  color="#dfa943"
-                                />
                               </TouchableOpacity>
+                            ))}
+                          </View>
+                        </View>
 
-                              {showProgramPicker && (
-                                <AnimatedPickerList
-                                  items={availablePrograms.map((p) => p.name)}
-                                  selected={sSignup.program}
-                                  onSelect={(v) => {
-                                    setSSignup((p) => ({ ...p, program: v }));
-                                    setShowProgramPicker(false);
-                                  }}
-                                />
-                              )}
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          {/* Year & Semester Grid */}
-                          <StaggeredItem index={3} cycle={animationCycle} direction={transitionDirection}>
-                            <View style={st.dualSelectorRow}>
-                              <View style={st.dualSelectorCol}>
-                                <Text style={st.miniSectionLabel}>YEAR *</Text>
-                                <View style={st.chipsGrid}>
-                                  {[1, 2, 3, 4].map((y) => (
-                                    <TactileChip
-                                      key={y}
-                                      label={`Y${y}`}
-                                      active={sSignup.year === y}
-                                      onPress={() => setSSignup((p) => ({ ...p, year: y }))}
-                                    />
-                                  ))}
-                                </View>
-                              </View>
-
-                              <View style={st.dualSelectorCol}>
-                                <Text style={st.miniSectionLabel}>SEMESTER *</Text>
-                                <View style={st.chipsGrid}>
-                                  {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
-                                    <TactileChip
-                                      key={s}
-                                      label={`${s}`}
-                                      small
-                                      active={sSignup.semester === s}
-                                      onPress={() => setSSignup((p) => ({ ...p, semester: s }))}
-                                    />
-                                  ))}
-                                </View>
-                              </View>
-                            </View>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={4} cycle={animationCycle} direction={transitionDirection}>
-                            <SectionDividerRule label="AUTHENTICATION CREDENTIALS" />
-                          </StaggeredItem>
-
-                          <StaggeredItem index={5} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="College Email"
-                              icon={<Ionicons name="mail-outline" size={17} color="#a6b7d4" />}
-                              required
-                            >
-                              <TextInput
-                                style={st.inputField}
-                                placeholder="student@tribhuvancollege.ac.in"
-                                placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                                value={sSignup.email}
-                                onChangeText={(v) => setSSignup((p) => ({ ...p, email: v }))}
-                              />
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={6} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Enrollment Number (Login ID)"
-                              icon={<MaterialCommunityIcons name="card-account-details-outline" size={17} color="#dfa943" />}
-                              highlight
-                              required
-                            >
-                              <TextInput
-                                style={st.inputField}
-                                placeholder="e.g. EN2024001"
-                                placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                autoCapitalize="characters"
-                                value={sSignup.enrollmentNumber}
-                                onChangeText={(v) => setSSignup((p) => ({ ...p, enrollmentNumber: v }))}
-                              />
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={7} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Password"
-                              icon={<Ionicons name="lock-closed-outline" size={17} color="#a6b7d4" />}
-                              required
-                            >
-                              <View style={st.passwordInputRow}>
-                                <TextInput
-                                  style={[st.inputField, { flex: 1, borderWidth: 0 }]}
-                                  placeholder="••••••••"
-                                  placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                  secureTextEntry={!showPassword}
-                                  value={sSignup.password}
-                                  onChangeText={(v) => setSSignup((p) => ({ ...p, password: v }))}
-                                />
-                                <TouchableOpacity
-                                  onPress={() => setShowPassword((v) => !v)}
-                                  style={st.eyeButton}
-                                >
-                                  <Ionicons
-                                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                                    size={18}
-                                    color="#a6b7d4"
-                                  />
-                                </TouchableOpacity>
-                              </View>
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={8} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Confirm Password"
-                              icon={<Ionicons name="lock-closed-outline" size={17} color="#a6b7d4" />}
-                              required
-                            >
-                              <View style={st.passwordInputRow}>
-                                <TextInput
-                                  style={[st.inputField, { flex: 1, borderWidth: 0 }]}
-                                  placeholder="••••••••"
-                                  placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                  secureTextEntry={!showConfirmPassword}
-                                  value={sSignup.confirmPassword}
-                                  onChangeText={(v) => setSSignup((p) => ({ ...p, confirmPassword: v }))}
-                                />
-                                <TouchableOpacity
-                                  onPress={() => setShowConfirmPassword((v) => !v)}
-                                  style={st.eyeButton}
-                                >
-                                  <Ionicons
-                                    name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
-                                    size={18}
-                                    color="#a6b7d4"
-                                  />
-                                </TouchableOpacity>
-                              </View>
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={9} cycle={animationCycle} direction={transitionDirection}>
-                            <TactilePrimaryButton
-                              title="Create Student Account"
-                              onPress={doStudentSignup}
-                              loading={loading}
-                            />
-                          </StaggeredItem>
-                        </>
-                      )}
-
-                      {/* ═════════════════════════════════════════════ */}
-                      {/* 3. TEACHER LOGIN FORM                         */}
-                      {/* ═════════════════════════════════════════════ */}
-                      {!isStudent && activeTab === 'LOGIN' && (
-                        <>
-                          <StaggeredItem index={1} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Institutional Email"
-                              icon={<Ionicons name="mail-outline" size={17} color="#a6b7d4" />}
-                              required
-                            >
-                              <TextInput
-                                style={st.inputField}
-                                placeholder="professor@tribhuvancollege.ac.in"
-                                placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                                value={tLogin.email}
-                                onChangeText={(v) => setTLogin((p) => ({ ...p, email: v }))}
-                              />
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={2} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Password"
-                              icon={<Ionicons name="lock-closed-outline" size={17} color="#a6b7d4" />}
-                              required
-                              rightHeaderEl={
-                                <TouchableOpacity
-                                  onPress={() => setError('Faculty password reset requires administrator assistance.')}
-                                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                                >
-                                  <Text style={st.forgotText}>Forgot?</Text>
-                                </TouchableOpacity>
-                              }
-                            >
-                              <View style={st.passwordInputRow}>
-                                <TextInput
-                                  style={[st.inputField, { flex: 1, borderWidth: 0 }]}
-                                  placeholder="••••••••"
-                                  placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                  secureTextEntry={!showPassword}
-                                  value={tLogin.password}
-                                  onChangeText={(v) => setTLogin((p) => ({ ...p, password: v }))}
-                                />
-                                <TouchableOpacity
-                                  onPress={() => setShowPassword((v) => !v)}
-                                  style={st.eyeButton}
-                                >
-                                  <Ionicons
-                                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                                    size={18}
-                                    color="#a6b7d4"
-                                  />
-                                </TouchableOpacity>
-                              </View>
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={3} cycle={animationCycle} direction={transitionDirection}>
-                            <TactilePrimaryButton
-                              title="Sign In to Faculty Portal"
-                              onPress={doTeacherLogin}
-                              loading={loading}
-                            />
-                          </StaggeredItem>
-                        </>
-                      )}
-
-                      {/* ═════════════════════════════════════════════ */}
-                      {/* 4. TEACHER SIGNUP FORM                        */}
-                      {/* ═════════════════════════════════════════════ */}
-                      {!isStudent && activeTab === 'SIGNUP' && (
-                        <>
-                          <StaggeredItem index={1} cycle={animationCycle} direction={transitionDirection}>
-                            <AlertBanner
-                              type="pending"
-                              message="Faculty registrations are subject to manual administrator review before access is enabled."
-                            />
-                          </StaggeredItem>
-
-                          <StaggeredItem index={2} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Full Name"
-                              icon={<Ionicons name="person-outline" size={17} color="#a6b7d4" />}
-                              required
-                            >
-                              <TextInput
-                                style={st.inputField}
-                                placeholder="e.g. Prof. Anil Kumar"
-                                placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                value={tSignup.name}
-                                onChangeText={(v) => setTSignup((p) => ({ ...p, name: v }))}
-                              />
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={3} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="College Email (Login ID)"
-                              icon={<Ionicons name="mail-outline" size={17} color="#dfa943" />}
-                              highlight
-                              required
-                            >
-                              <TextInput
-                                style={st.inputField}
-                                placeholder="teacher@tribhuvancollege.ac.in"
-                                placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                keyboardType="email-address"
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                                value={tSignup.email}
-                                onChangeText={(v) => setTSignup((p) => ({ ...p, email: v }))}
-                              />
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={4} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Employee ID"
-                              icon={<MaterialCommunityIcons name="badge-account-outline" size={17} color="#a6b7d4" />}
-                              required
-                            >
-                              <TextInput
-                                style={st.inputField}
-                                placeholder="e.g. TCH-001"
-                                placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                autoCapitalize="characters"
-                                value={tSignup.employeeId}
-                                onChangeText={(v) => setTSignup((p) => ({ ...p, employeeId: v }))}
-                              />
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={5} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Department"
-                              icon={<MaterialCommunityIcons name="domain" size={17} color="#a6b7d4" />}
-                              required
-                            >
+                        <View style={st.dualCol}>
+                          <Text style={st.miniColLabel}>SEMESTER *</Text>
+                          <View style={st.chipsRow}>
+                            {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
                               <TouchableOpacity
-                                style={st.selectButton}
-                                onPress={() => setShowDeptPicker((v) => !v)}
-                                activeOpacity={0.7}
+                                key={s}
+                                style={[
+                                  st.semChip,
+                                  sSignup.semester === s && st.yearChipActive,
+                                ]}
+                                onPress={() => {
+                                  try {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                  } catch {}
+                                  setSSignup((p) => ({ ...p, semester: s }));
+                                }}
+                                activeOpacity={0.75}
                               >
-                                <Text style={st.selectButtonText}>{tSignup.department}</Text>
-                                <Ionicons
-                                  name={showDeptPicker ? 'chevron-up' : 'chevron-down'}
-                                  size={16}
-                                  color="#dfa943"
-                                />
+                                <Text
+                                  style={[
+                                    st.semChipText,
+                                    sSignup.semester === s && st.yearChipTextActive,
+                                  ]}
+                                >
+                                  {s}
+                                </Text>
                               </TouchableOpacity>
-
-                              {showDeptPicker && (
-                                <AnimatedPickerList
-                                  items={DEPARTMENTS}
-                                  selected={tSignup.department}
-                                  onSelect={(v) => {
-                                    setTSignup((p) => ({ ...p, department: v }));
-                                    setShowDeptPicker(false);
-                                  }}
-                                />
-                              )}
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={6} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Password"
-                              icon={<Ionicons name="lock-closed-outline" size={17} color="#a6b7d4" />}
-                              required
-                            >
-                              <View style={st.passwordInputRow}>
-                                <TextInput
-                                  style={[st.inputField, { flex: 1, borderWidth: 0 }]}
-                                  placeholder="••••••••"
-                                  placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                  secureTextEntry={!showPassword}
-                                  value={tSignup.password}
-                                  onChangeText={(v) => setTSignup((p) => ({ ...p, password: v }))}
-                                />
-                                <TouchableOpacity
-                                  onPress={() => setShowPassword((v) => !v)}
-                                  style={st.eyeButton}
-                                >
-                                  <Ionicons
-                                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                                    size={18}
-                                    color="#a6b7d4"
-                                  />
-                                </TouchableOpacity>
-                              </View>
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={7} cycle={animationCycle} direction={transitionDirection}>
-                            <GlassInputField
-                              label="Confirm Password"
-                              icon={<Ionicons name="lock-closed-outline" size={17} color="#a6b7d4" />}
-                              required
-                            >
-                              <View style={st.passwordInputRow}>
-                                <TextInput
-                                  style={[st.inputField, { flex: 1, borderWidth: 0 }]}
-                                  placeholder="••••••••"
-                                  placeholderTextColor="rgba(166, 183, 212, 0.45)"
-                                  secureTextEntry={!showConfirmPassword}
-                                  value={tSignup.confirmPassword}
-                                  onChangeText={(v) => setTSignup((p) => ({ ...p, confirmPassword: v }))}
-                                />
-                                <TouchableOpacity
-                                  onPress={() => setShowConfirmPassword((v) => !v)}
-                                  style={st.eyeButton}
-                                >
-                                  <Ionicons
-                                    name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
-                                    size={18}
-                                    color="#a6b7d4"
-                                  />
-                                </TouchableOpacity>
-                              </View>
-                            </GlassInputField>
-                          </StaggeredItem>
-
-                          <StaggeredItem index={8} cycle={animationCycle} direction={transitionDirection}>
-                            <TactilePrimaryButton
-                              title="Submit Faculty Application"
-                              onPress={doTeacherSignup}
-                              loading={loading}
-                            />
-                          </StaggeredItem>
-                        </>
-                      )}
-                    </AnimatedView>
-
-                    {/* ─── INSTITUTIONAL SECURITY FOOTER ─── */}
-                    <View style={st.footerArea}>
-                      <View style={st.footerShieldRow}>
-                        <Ionicons name="shield-checkmark" size={14} color="#dfa943" />
-                        <Text style={st.footerSecurityText}>256-Bit Encrypted Academic Network</Text>
+                            ))}
+                          </View>
+                        </View>
                       </View>
-                      <Text style={st.footerCopyright}>
-                        © {new Date().getFullYear()} {COLLEGE.name}. All rights reserved.
-                      </Text>
+
+                      <View style={st.fieldDivider} />
+
+                      <CleanInputField
+                        label="College Email"
+                        icon={<Ionicons name="mail-outline" size={18} color="#6b7c96" />}
+                        required
+                      >
+                        <TextInput
+                          style={st.textInput}
+                          placeholder="student@tribhuvancollege.ac.in"
+                          placeholderTextColor="#9ca3af"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          value={sSignup.email}
+                          onChangeText={(v) => setSSignup((p) => ({ ...p, email: v }))}
+                        />
+                      </CleanInputField>
+
+                      <CleanInputField
+                        label="Enrollment Number (Login ID)"
+                        icon={<MaterialCommunityIcons name="card-account-details-outline" size={18} color="#c8922a" />}
+                        required
+                        highlight
+                      >
+                        <TextInput
+                          style={st.textInput}
+                          placeholder="e.g. EN2024001"
+                          placeholderTextColor="#9ca3af"
+                          autoCapitalize="characters"
+                          value={sSignup.enrollmentNumber}
+                          onChangeText={(v) => setSSignup((p) => ({ ...p, enrollmentNumber: v }))}
+                        />
+                      </CleanInputField>
+
+                      <CleanInputField
+                        label="Password"
+                        icon={<Ionicons name="lock-closed-outline" size={18} color="#6b7c96" />}
+                        required
+                      >
+                        <View style={st.passwordRow}>
+                          <TextInput
+                            style={[st.textInput, { flex: 1 }]}
+                            placeholder="••••••••"
+                            placeholderTextColor="#9ca3af"
+                            secureTextEntry={!showPassword}
+                            value={sSignup.password}
+                            onChangeText={(v) => setSSignup((p) => ({ ...p, password: v }))}
+                          />
+                          <TouchableOpacity
+                            onPress={() => setShowPassword((v) => !v)}
+                            style={st.eyeIconButton}
+                          >
+                            <Ionicons
+                              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                              size={19}
+                              color="#6b7c96"
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </CleanInputField>
+
+                      <CleanInputField
+                        label="Confirm Password"
+                        icon={<Ionicons name="lock-closed-outline" size={18} color="#6b7c96" />}
+                        required
+                      >
+                        <View style={st.passwordRow}>
+                          <TextInput
+                            style={[st.textInput, { flex: 1 }]}
+                            placeholder="••••••••"
+                            placeholderTextColor="#9ca3af"
+                            secureTextEntry={!showConfirmPassword}
+                            value={sSignup.confirmPassword}
+                            onChangeText={(v) => setSSignup((p) => ({ ...p, confirmPassword: v }))}
+                          />
+                          <TouchableOpacity
+                            onPress={() => setShowConfirmPassword((v) => !v)}
+                            style={st.eyeIconButton}
+                          >
+                            <Ionicons
+                              name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+                              size={19}
+                              color="#6b7c96"
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </CleanInputField>
+
+                      <CleanPillButton
+                        title="Create Account"
+                        onPress={doStudentSignup}
+                        loading={loading}
+                      />
                     </View>
-                  </View>
-                </BlurView>
-              </LinearGradient>
+                  )}
+
+                  {/* ──────────────────────────────────────────────── */}
+                  {/* 3. TEACHER LOGIN FORM                            */}
+                  {/* ──────────────────────────────────────────────── */}
+                  {!isStudent && isLogin && (
+                    <View style={st.formGroup}>
+                      <CleanInputField
+                        label="Institutional Email"
+                        icon={<Ionicons name="mail-outline" size={18} color="#6b7c96" />}
+                        required
+                      >
+                        <TextInput
+                          style={st.textInput}
+                          placeholder="faculty@tribhuvancollege.ac.in"
+                          placeholderTextColor="#9ca3af"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          value={tLogin.email}
+                          onChangeText={(v) => setTLogin((p) => ({ ...p, email: v }))}
+                        />
+                      </CleanInputField>
+
+                      <CleanInputField
+                        label="Password"
+                        icon={<Ionicons name="lock-closed-outline" size={18} color="#6b7c96" />}
+                        required
+                        rightHeaderEl={
+                          <TouchableOpacity
+                            onPress={() => setError('Faculty password reset requires administrator assistance.')}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          >
+                            <Text style={st.forgotLink}>Forgot password?</Text>
+                          </TouchableOpacity>
+                        }
+                      >
+                        <View style={st.passwordRow}>
+                          <TextInput
+                            style={[st.textInput, { flex: 1 }]}
+                            placeholder="••••••••"
+                            placeholderTextColor="#9ca3af"
+                            secureTextEntry={!showPassword}
+                            value={tLogin.password}
+                            onChangeText={(v) => setTLogin((p) => ({ ...p, password: v }))}
+                          />
+                          <TouchableOpacity
+                            onPress={() => setShowPassword((v) => !v)}
+                            style={st.eyeIconButton}
+                          >
+                            <Ionicons
+                              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                              size={19}
+                              color="#6b7c96"
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </CleanInputField>
+
+                      <CleanPillButton
+                        title="Log In to Faculty Portal"
+                        onPress={doTeacherLogin}
+                        loading={loading}
+                      />
+                    </View>
+                  )}
+
+                  {/* ──────────────────────────────────────────────── */}
+                  {/* 4. TEACHER SIGNUP FORM                           */}
+                  {/* ──────────────────────────────────────────────── */}
+                  {!isStudent && !isLogin && (
+                    <View style={st.formGroup}>
+                      <CleanAlertBanner
+                        type="pending"
+                        message="Faculty registrations are manually reviewed by the college administrator before activation."
+                      />
+
+                      <CleanInputField
+                        label="Full Name"
+                        icon={<Ionicons name="person-outline" size={18} color="#6b7c96" />}
+                        required
+                      >
+                        <TextInput
+                          style={st.textInput}
+                          placeholder="e.g. Dr. Anil Kumar"
+                          placeholderTextColor="#9ca3af"
+                          value={tSignup.name}
+                          onChangeText={(v) => setTSignup((p) => ({ ...p, name: v }))}
+                        />
+                      </CleanInputField>
+
+                      <CleanInputField
+                        label="Institutional Email (Login ID)"
+                        icon={<Ionicons name="mail-outline" size={18} color="#c8922a" />}
+                        required
+                        highlight
+                      >
+                        <TextInput
+                          style={st.textInput}
+                          placeholder="teacher@tribhuvancollege.ac.in"
+                          placeholderTextColor="#9ca3af"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          value={tSignup.email}
+                          onChangeText={(v) => setTSignup((p) => ({ ...p, email: v }))}
+                        />
+                      </CleanInputField>
+
+                      <CleanInputField
+                        label="Employee ID"
+                        icon={<MaterialCommunityIcons name="badge-account-outline" size={18} color="#6b7c96" />}
+                        required
+                      >
+                        <TextInput
+                          style={st.textInput}
+                          placeholder="e.g. TCH-102"
+                          placeholderTextColor="#9ca3af"
+                          autoCapitalize="characters"
+                          value={tSignup.employeeId}
+                          onChangeText={(v) => setTSignup((p) => ({ ...p, employeeId: v }))}
+                        />
+                      </CleanInputField>
+
+                      {/* Department Picker with Modal */}
+                      <CleanInputField
+                        label="Department"
+                        icon={<MaterialCommunityIcons name="domain" size={18} color="#6b7c96" />}
+                        required
+                      >
+                        <TouchableOpacity
+                          style={st.pickerTriggerButton}
+                          onPress={() => {
+                            setModalPickerConfig({
+                              visible: true,
+                              title: 'Select Department',
+                              items: DEPARTMENTS,
+                              selected: tSignup.department,
+                              onSelect: (item) => {
+                                setTSignup((p) => ({ ...p, department: item }));
+                                setModalPickerConfig((c) => ({ ...c, visible: false }));
+                              },
+                            });
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={st.pickerTriggerText} numberOfLines={1}>
+                            {tSignup.department}
+                          </Text>
+                          <Ionicons name="chevron-down" size={18} color="#6b7c96" />
+                        </TouchableOpacity>
+                      </CleanInputField>
+
+                      <CleanInputField
+                        label="Password"
+                        icon={<Ionicons name="lock-closed-outline" size={18} color="#6b7c96" />}
+                        required
+                      >
+                        <View style={st.passwordRow}>
+                          <TextInput
+                            style={[st.textInput, { flex: 1 }]}
+                            placeholder="••••••••"
+                            placeholderTextColor="#9ca3af"
+                            secureTextEntry={!showPassword}
+                            value={tSignup.password}
+                            onChangeText={(v) => setTSignup((p) => ({ ...p, password: v }))}
+                          />
+                          <TouchableOpacity
+                            onPress={() => setShowPassword((v) => !v)}
+                            style={st.eyeIconButton}
+                          >
+                            <Ionicons
+                              name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                              size={19}
+                              color="#6b7c96"
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </CleanInputField>
+
+                      <CleanInputField
+                        label="Confirm Password"
+                        icon={<Ionicons name="lock-closed-outline" size={18} color="#6b7c96" />}
+                        required
+                      >
+                        <View style={st.passwordRow}>
+                          <TextInput
+                            style={[st.textInput, { flex: 1 }]}
+                            placeholder="••••••••"
+                            placeholderTextColor="#9ca3af"
+                            secureTextEntry={!showConfirmPassword}
+                            value={tSignup.confirmPassword}
+                            onChangeText={(v) => setTSignup((p) => ({ ...p, confirmPassword: v }))}
+                          />
+                          <TouchableOpacity
+                            onPress={() => setShowConfirmPassword((v) => !v)}
+                            style={st.eyeIconButton}
+                          >
+                            <Ionicons
+                              name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'}
+                              size={19}
+                              color="#6b7c96"
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </CleanInputField>
+
+                      <CleanPillButton
+                        title="Submit Faculty Application"
+                        onPress={doTeacherSignup}
+                        loading={loading}
+                      />
+                    </View>
+                  )}
+                </SceneTransition>
+
+                {/* ──────────────────────────────────────────────── */}
+                {/* 3. MINIMAL SUPPORTING SWITCH ACTION AT BOTTOM    */}
+                {/* ──────────────────────────────────────────────── */}
+                <View style={st.switchFooterRow}>
+                  <Text style={st.switchFooterText}>
+                    {isLogin ? "Don't have an account? " : 'Already have an account? '}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => handleTabChange(isLogin ? 'SIGNUP' : 'LOGIN')}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  >
+                    <Text style={st.switchFooterAction}>
+                      {isLogin ? 'Sign Up' : 'Log In'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Secure Network Footnote */}
+              <View style={st.securityFootnote}>
+                <Ionicons name="shield-checkmark-outline" size={13} color="#8a99ad" />
+                <Text style={st.securityFootnoteText}>
+                  256-Bit Encrypted Academic Network • © {new Date().getFullYear()} {COLLEGE.name}
+                </Text>
+              </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
+
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* 4. MODAL SCROLLABLE PICKER (Solves Dropdown Cut-off)    */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        <Modal
+          visible={modalPickerConfig.visible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setModalPickerConfig((c) => ({ ...c, visible: false }))}
+        >
+          <Pressable
+            style={st.modalBackdrop}
+            onPress={() => setModalPickerConfig((c) => ({ ...c, visible: false }))}
+          >
+            <Pressable style={st.modalContent} onPress={(e) => e.stopPropagation()}>
+              <View style={st.modalHeader}>
+                <Text style={st.modalTitleText}>{modalPickerConfig.title}</Text>
+                <TouchableOpacity
+                  style={st.modalCloseBtn}
+                  onPress={() => setModalPickerConfig((c) => ({ ...c, visible: false }))}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="close" size={20} color="#0d1f3c" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView
+                style={st.modalListScroll}
+                showsVerticalScrollIndicator={true}
+                keyboardShouldPersistTaps="handled"
+              >
+                {modalPickerConfig.items.map((item) => {
+                  const isSelected = item === modalPickerConfig.selected;
+                  return (
+                    <TouchableOpacity
+                      key={item}
+                      style={[st.modalListItem, isSelected && st.modalListItemActive]}
+                      onPress={() => modalPickerConfig.onSelect(item)}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          st.modalListItemText,
+                          isSelected && st.modalListItemTextActive,
+                        ]}
+                      >
+                        {item}
+                      </Text>
+                      {isSelected && (
+                        <Ionicons name="checkmark-circle" size={18} color="#c8922a" />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </Pressable>
+          </Pressable>
+        </Modal>
       </SafeAreaView>
     </View>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ANIMATED SUB-COMPONENTS & ATOMS
+// SUB-COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * StaggeredItem renders a child element with spring-eased entry and directional slide
+ * Single calm slide + crossfade transition (280ms)
  */
-function StaggeredItem({
-  index,
+function SceneTransition({
   cycle,
   direction,
   children,
 }: {
-  index: number;
   cycle: number;
-  direction: 'toRight' | 'toLeft';
+  direction: 'left' | 'right';
   children: React.ReactNode;
 }) {
   const prefersReducedMotion = useReducedMotion();
-  const opacity = useSharedValue(prefersReducedMotion ? 1 : 0);
-  const translateY = useSharedValue(prefersReducedMotion ? 0 : 16);
-  const translateX = useSharedValue(
-    prefersReducedMotion ? 0 : direction === 'toRight' ? 14 : -14
-  );
+  const opacity = useSharedValue(1);
+  const translateX = useSharedValue(0);
 
   useEffect(() => {
     if (prefersReducedMotion) {
       opacity.value = 1;
-      translateY.value = 0;
       translateX.value = 0;
       return;
     }
 
-    const delayMs = index * 32;
     opacity.value = 0;
-    translateY.value = 14;
-    translateX.value = direction === 'toRight' ? 12 : -12;
+    translateX.value = direction === 'left' ? 18 : -18;
 
-    opacity.value = withDelay(delayMs, withTiming(1, { duration: 220 }));
-    translateY.value = withDelay(
-      delayMs,
-      withSpring(0, { damping: 16, stiffness: 160 })
-    );
-    translateX.value = withDelay(
-      delayMs,
-      withSpring(0, { damping: 16, stiffness: 160 })
-    );
-  }, [cycle, index, direction, prefersReducedMotion]);
+    opacity.value = withTiming(1, { duration: 280, easing: Easing.out(Easing.cubic) });
+    translateX.value = withTiming(0, { duration: 280, easing: Easing.out(Easing.cubic) });
+  }, [cycle, direction, prefersReducedMotion]);
 
   const animStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [
-      { translateY: translateY.value },
-      { translateX: translateX.value },
-    ],
+    transform: [{ translateX: translateX.value }],
   }));
 
-  return <AnimatedView style={[st.staggeredWrap, animStyle]}>{children}</AnimatedView>;
+  return <AnimatedView style={[{ width: '100%' }, animStyle]}>{children}</AnimatedView>;
 }
 
 /**
- * GlassInputField provides active glowing border and frosted background for input fields
+ * Clean input field with subtle focus border
  */
-function GlassInputField({
+function CleanInputField({
   label,
   icon,
   children,
@@ -1360,18 +1068,18 @@ function GlassInputField({
   rightHeaderEl?: React.ReactNode;
 }) {
   return (
-    <View style={st.fieldGroup}>
-      <View style={st.fieldHeaderRow}>
-        <View style={st.fieldLabelLeft}>
-          {icon && <View style={st.fieldIconWrap}>{icon}</View>}
-          <Text style={[st.fieldLabelText, highlight && st.fieldLabelTextHighlight]}>
+    <View style={st.inputGroup}>
+      <View style={st.inputHeaderRow}>
+        <View style={st.inputLabelLeft}>
+          {icon && <View style={st.inputIconWrap}>{icon}</View>}
+          <Text style={[st.inputLabelText, highlight && st.inputLabelTextHighlight]}>
             {label}
-            {required && <Text style={st.asterisk}> *</Text>}
+            {required && <Text style={st.requiredAsterisk}> *</Text>}
           </Text>
         </View>
         {rightHeaderEl}
       </View>
-      <View style={[st.fieldContainer, highlight && st.fieldContainerHighlight]}>
+      <View style={[st.inputContainerBox, highlight && st.inputContainerBoxHighlight]}>
         {children}
       </View>
     </View>
@@ -1379,9 +1087,9 @@ function GlassInputField({
 }
 
 /**
- * TactilePrimaryButton renders a 3D gold gradient submit button with press-scale feedback
+ * Clean fully-rounded pill button matching the reference design
  */
-function TactilePrimaryButton({
+function CleanPillButton({
   title,
   onPress,
   loading,
@@ -1390,181 +1098,29 @@ function TactilePrimaryButton({
   onPress: () => void;
   loading: boolean;
 }) {
-  const scale = useSharedValue(1);
-
-  const handlePressIn = () => {
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {}
-    scale.value = withSpring(0.96, { damping: 14, stiffness: 220 });
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 12, stiffness: 160 });
-  };
-
-  const buttonAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
   return (
-    <AnimatedView style={[st.buttonWrap, buttonAnimStyle]}>
-      <TouchableOpacity
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        activeOpacity={0.92}
-        disabled={loading}
-      >
-        <LinearGradient
-          colors={['#dfa943', '#c8922a', '#9a6b18']}
-          style={st.primaryButton}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          {/* Top Specular Edge Highlight */}
-          <View style={st.buttonSpecularLine} />
-
-          {loading ? (
-            <ActivityIndicator color="#091529" size="small" />
-          ) : (
-            <View style={st.buttonInner}>
-              <Text style={st.primaryButtonText}>{title}</Text>
-              <View style={st.buttonArrowCircle}>
-                <Ionicons name="arrow-forward" size={14} color="#dfa943" />
-              </View>
-            </View>
-          )}
-        </LinearGradient>
-      </TouchableOpacity>
-    </AnimatedView>
+    <TouchableOpacity
+      style={st.pillButton}
+      onPress={onPress}
+      activeOpacity={0.88}
+      disabled={loading}
+    >
+      {loading ? (
+        <ActivityIndicator color="#ffffff" size="small" />
+      ) : (
+        <View style={st.pillButtonInner}>
+          <Text style={st.pillButtonText}>{title}</Text>
+          <Ionicons name="arrow-forward" size={16} color="#ffffff" />
+        </View>
+      )}
+    </TouchableOpacity>
   );
 }
 
 /**
- * TactileChip renders animated select buttons with spring bounce
+ * Clean alert banner for errors, success, or pending approval
  */
-function TactileChip({
-  label,
-  active,
-  onPress,
-  small,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-  small?: boolean;
-}) {
-  const chipScale = useSharedValue(1);
-
-  const handlePress = () => {
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {}
-    chipScale.value = withSequence(
-      withTiming(0.88, { duration: 70 }),
-      withSpring(1, { damping: 12, stiffness: 180 })
-    );
-    onPress();
-  };
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: chipScale.value }],
-  }));
-
-  return (
-    <AnimatedView style={animStyle}>
-      <TouchableOpacity
-        onPress={handlePress}
-        activeOpacity={0.8}
-        style={[
-          st.chipBase,
-          small && st.chipSmall,
-          active && st.chipActive,
-        ]}
-      >
-        {active ? (
-          <LinearGradient
-            colors={['#dfa943', '#c8922a']}
-            style={st.chipActiveGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <Text style={[st.chipLabel, small && st.chipLabelSmall, st.chipLabelActive]}>
-              {label}
-            </Text>
-          </LinearGradient>
-        ) : (
-          <Text style={[st.chipLabel, small && st.chipLabelSmall]}>
-            {label}
-          </Text>
-        )}
-      </TouchableOpacity>
-    </AnimatedView>
-  );
-}
-
-/**
- * AnimatedPickerList renders dropdown option items
- */
-function AnimatedPickerList({
-  items,
-  selected,
-  onSelect,
-}: {
-  items: string[];
-  selected: string;
-  onSelect: (item: string) => void;
-}) {
-  return (
-    <View style={st.pickerDropdownContainer}>
-      {items.map((item) => {
-        const isSel = item === selected;
-        return (
-          <TouchableOpacity
-            key={item}
-            onPress={() => onSelect(item)}
-            style={[st.pickerRow, isSel && st.pickerRowActive]}
-            activeOpacity={0.7}
-          >
-            <Text style={[st.pickerRowText, isSel && st.pickerRowTextActive]} numberOfLines={1}>
-              {item}
-            </Text>
-            {isSel && <Ionicons name="checkmark-circle" size={16} color="#dfa943" />}
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
-}
-
-/**
- * SectionDividerRule renders a delicate horizontal rule
- */
-function SectionDividerRule({ label }: { label: string }) {
-  return (
-    <View style={st.sectionRuleRow}>
-      <LinearGradient
-        colors={['transparent', 'rgba(200, 146, 42, 0.35)']}
-        style={st.sectionRuleLine}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-      />
-      <Text style={st.sectionRuleText}>{label}</Text>
-      <LinearGradient
-        colors={['rgba(200, 146, 42, 0.35)', 'transparent']}
-        style={st.sectionRuleLine}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-      />
-    </View>
-  );
-}
-
-/**
- * AlertBanner renders feedback messages with distinct styling
- */
-function AlertBanner({
+function CleanAlertBanner({
   type,
   message,
 }: {
@@ -1573,46 +1129,46 @@ function AlertBanner({
 }) {
   const config = {
     error: {
-      bg: 'rgba(90, 24, 24, 0.35)',
-      border: '#e05252',
-      text: '#ffd5d5',
-      icon: <Ionicons name="alert-circle-outline" size={18} color="#e05252" />,
-      title: 'Authentication Notice',
+      bg: '#fdf2f2',
+      border: '#f87171',
+      text: '#991b1b',
+      icon: <Ionicons name="alert-circle-outline" size={18} color="#dc2626" />,
+      title: 'Authentication Error',
     },
     success: {
-      bg: 'rgba(20, 70, 35, 0.35)',
-      border: '#34d399',
-      text: '#d1fae5',
-      icon: <Ionicons name="checkmark-circle-outline" size={18} color="#34d399" />,
+      bg: '#f0fdf4',
+      border: '#4ade80',
+      text: '#166534',
+      icon: <Ionicons name="checkmark-circle-outline" size={18} color="#16a34a" />,
       title: 'Success',
     },
     pending: {
-      bg: 'rgba(90, 65, 15, 0.35)',
-      border: '#dfa943',
-      text: '#fef3c7',
-      icon: <Ionicons name="time-outline" size={18} color="#dfa943" />,
+      bg: '#fffbeb',
+      border: '#fbbf24',
+      text: '#92400e',
+      icon: <Ionicons name="time-outline" size={18} color="#d97706" />,
       title: 'Approval Pending',
     },
   }[type];
 
   return (
     <View style={[st.alertBox, { backgroundColor: config.bg, borderColor: config.border }]}>
-      <View style={st.alertIconCol}>{config.icon}</View>
-      <View style={st.alertContentCol}>
-        <Text style={[st.alertTitle, { color: config.border }]}>{config.title}</Text>
-        <Text style={[st.alertMessage, { color: config.text }]}>{message}</Text>
+      <View style={st.alertIconBox}>{config.icon}</View>
+      <View style={st.alertContentBox}>
+        <Text style={[st.alertTitleText, { color: config.text }]}>{config.title}</Text>
+        <Text style={[st.alertMessageText, { color: config.text }]}>{message}</Text>
       </View>
     </View>
   );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ULTRA-PREMIUM DESIGN SYSTEM STYLES
+// WARM LIGHT BASE + NAVY/GOLD ACCENTS STYLES
 // ═══════════════════════════════════════════════════════════════════════════
 const st = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#050e1d',
+    backgroundColor: '#f8f5ee', // Warm cream foundation
   },
   safeArea: {
     flex: 1,
@@ -1622,563 +1178,365 @@ const st = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 40,
-  },
-
-  // ── AMBIENT DRIFTING GLOW ORBS ──
-  ambientOrb1: {
-    position: 'absolute',
-    top: -40,
-    right: -50,
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-  },
-  ambientOrb2: {
-    position: 'absolute',
-    top: 260,
-    left: -70,
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-  },
-  ambientOrb3: {
-    position: 'absolute',
-    bottom: 50,
-    right: -20,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-  },
-  watermarkRings: {
-    position: 'absolute',
-    top: 60,
-    alignSelf: 'center',
-    width: 380,
-    height: 380,
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0.04,
-  },
-  watermarkRingOuter: {
-    position: 'absolute',
-    width: 380,
-    height: 380,
-    borderRadius: 190,
-    borderWidth: 1,
-    borderColor: '#c8922a',
-  },
-  watermarkRingInner: {
-    position: 'absolute',
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    borderWidth: 1,
-    borderColor: '#c8922a',
+    paddingBottom: 36,
   },
 
   // ── HEADER ──
-  headerContainer: {
+  headerSection: {
     alignItems: 'center',
-    paddingTop: 14,
-    paddingBottom: 24,
-    paddingHorizontal: 22,
+    paddingTop: 18,
+    paddingBottom: 20,
+    paddingHorizontal: 24,
   },
-  topAccentBar: {
-    flexDirection: 'row',
-    width: '100%',
-    height: 2,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-  },
-  accentNavy: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  accentGold: {
+  emblemOuter: {
     width: 80,
-  },
-
-  crestOuterRing: {
-    width: 82,
-    height: 82,
-    borderRadius: 41,
+    height: 80,
+    borderRadius: 40,
     borderWidth: 1.5,
-    borderColor: 'rgba(200, 146, 42, 0.5)',
+    borderColor: 'rgba(200, 146, 42, 0.4)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
-    position: 'relative',
-    shadowColor: '#c8922a',
+    backgroundColor: '#ffffff',
+    marginBottom: 14,
+    shadowColor: '#0d1f3c',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+    position: 'relative',
   },
-  crestGlowBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 41,
-  },
-  crestMidRing: {
+  emblemRing: {
     width: 64,
     height: 64,
     borderRadius: 32,
     borderWidth: 1.5,
-    borderColor: '#dfa943',
+    borderColor: '#c8922a',
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
+    backgroundColor: '#0d1f3c',
   },
-  crestCore: {
-    width: '100%',
-    height: '100%',
+  emblemCore: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sealDotTop: {
+  emblemStarTop: {
     position: 'absolute',
     top: -3,
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#dfa943',
+    backgroundColor: '#c8922a',
   },
-  sealDotBottom: {
+  emblemStarBottom: {
     position: 'absolute',
     bottom: -3,
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#dfa943',
-  },
-  sealDotLeft: {
-    position: 'absolute',
-    left: -3,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#dfa943',
-  },
-  sealDotRight: {
-    position: 'absolute',
-    right: -3,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#dfa943',
+    backgroundColor: '#c8922a',
   },
 
-  collegeTitle: {
-    fontSize: 19,
-    fontWeight: '800',
-    color: '#f8f5ee',
-    textAlign: 'center',
-    letterSpacing: 0.8,
-    lineHeight: 26,
-    marginBottom: 8,
-  },
-
-  diamondDivider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-    gap: 8,
-  },
-  diamondLine: {
-    width: 28,
-    height: 1,
-  },
-  diamondShape: {
-    width: 4,
-    height: 4,
-    backgroundColor: '#dfa943',
-    transform: [{ rotate: '45deg' }],
-  },
-  portalTag: {
-    fontSize: 9.5,
-    fontWeight: '800',
-    color: '#dfa943',
-    letterSpacing: 2.8,
-  },
-
-  headerSubtitle: {
+  collegeBrandText: {
     fontSize: 12,
-    color: 'rgba(240, 236, 228, 0.65)',
-    letterSpacing: 0.3,
-    marginBottom: 18,
+    fontWeight: '800',
+    color: '#c8922a',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: 6,
     textAlign: 'center',
   },
-
-  // ── NEUMORPHIC ROLE SWITCHER ──
-  switcherContainer: {
-    marginTop: 2,
+  mainHeadingText: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#0d1f3c',
+    letterSpacing: 0.3,
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  switcherTrack: {
+  mainSubheadText: {
+    fontSize: 13,
+    color: '#6b7c96',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 20,
+    paddingHorizontal: 12,
+  },
+
+  // ── ROLE TOGGLE (STUDENT / FACULTY) ──
+  roleSwitcherTrack: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(7, 17, 34, 0.85)',
-    borderRadius: 16,
+    backgroundColor: '#ede7db',
+    borderRadius: 24,
     padding: 4,
     borderWidth: 1,
-    borderColor: 'rgba(200, 146, 42, 0.35)',
+    borderColor: '#e2dacb',
     position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
-  switcherPill: {
+  roleSwitcherPill: {
     position: 'absolute',
     top: 4,
     left: 4,
     bottom: 4,
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#dfa943',
+    borderRadius: 20,
+    backgroundColor: '#0d1f3c',
+    shadowColor: '#0d1f3c',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  switcherPillGradient: {
+  roleSwitcherButton: {
     flex: 1,
-    borderRadius: 12,
-  },
-  switcherPillHighlight: {
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-  },
-  switcherButton: {
-    flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 2,
   },
-  switcherButtonInner: {
+  roleButtonInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+    gap: 7,
   },
-  switcherLabel: {
+  roleButtonText: {
     fontSize: 13,
     fontWeight: '700',
-    color: 'rgba(240, 236, 228, 0.7)',
-    letterSpacing: 0.4,
+    color: '#526079',
+    letterSpacing: 0.2,
   },
-  switcherLabelActive: {
-    color: '#091529',
+  roleButtonTextActive: {
+    color: '#ffffff',
     fontWeight: '800',
   },
 
-  // ── GLASSMORPHIC FLOATING CARD ──
-  glassCardWrapper: {
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.45,
-    shadowRadius: 24,
-    elevation: 12,
-  },
-  cardBorderGradient: {
-    borderRadius: 26,
-    padding: 1,
-  },
-  cardBlur: {
-    borderRadius: 25,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(10, 22, 44, 0.75)',
-  },
-  cardContentInner: {
+  // ── CLEAN WHITE FORM CARD ──
+  formCardWrapper: {
     paddingHorizontal: 20,
-    paddingTop: 18,
-    paddingBottom: 30,
   },
-
-  // ── TABS ──
-  tabBarContainer: {
-    flexDirection: 'row',
-    position: 'relative',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(200, 146, 42, 0.15)',
-    marginBottom: 22,
+  formCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#e8e1d5',
+    paddingHorizontal: 22,
+    paddingTop: 22,
+    paddingBottom: 24,
+    shadowColor: '#0d1f3c',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    elevation: 3,
   },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  tabItemText: {
-    fontSize: 12.5,
-    fontWeight: '700',
-    color: 'rgba(166, 183, 212, 0.55)',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
-  tabItemTextActive: {
-    color: '#f8f5ee',
-    fontWeight: '800',
-  },
-  tabActiveIndicator: {
-    position: 'absolute',
-    bottom: -1,
-    left: 0,
-    height: 2.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabIndicatorBar: {
-    width: '45%',
-    height: '100%',
-    borderRadius: 2,
-  },
-
-  // ── FORM ELEMENTS ──
-  formBody: {
+  formGroup: {
     width: '100%',
   },
-  staggeredWrap: {
-    width: '100%',
-  },
-  fieldGroup: {
+
+  // ── INPUT FIELDS ──
+  inputGroup: {
     marginBottom: 16,
   },
-  fieldHeaderRow: {
+  inputHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 7,
+    marginBottom: 6,
   },
-  fieldLabelLeft: {
+  inputLabelLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  fieldIconWrap: {
+  inputIconWrap: {
     marginRight: 6,
   },
-  fieldLabelText: {
-    fontSize: 11,
+  inputLabelText: {
+    fontSize: 11.5,
     fontWeight: '700',
-    color: 'rgba(166, 183, 212, 0.85)',
-    letterSpacing: 0.6,
+    color: '#526079',
+    letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
-  fieldLabelTextHighlight: {
-    color: '#dfa943',
+  inputLabelTextHighlight: {
+    color: '#c8922a',
   },
-  asterisk: {
-    color: '#e05252',
+  requiredAsterisk: {
+    color: '#dc2626',
     fontWeight: '800',
   },
-  forgotText: {
-    fontSize: 11.5,
-    color: '#dfa943',
+  forgotLink: {
+    fontSize: 12,
+    color: '#c8922a',
     fontWeight: '700',
-    letterSpacing: 0.2,
   },
 
-  fieldContainer: {
-    backgroundColor: 'rgba(7, 16, 32, 0.75)',
+  inputContainerBox: {
+    backgroundColor: '#faf8f5',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(200, 146, 42, 0.22)',
+    borderColor: '#e4dcce',
     overflow: 'hidden',
   },
-  fieldContainerHighlight: {
-    borderColor: 'rgba(223, 169, 67, 0.55)',
-    backgroundColor: 'rgba(15, 30, 56, 0.85)',
+  inputContainerBoxHighlight: {
+    borderColor: '#c8922a',
+    backgroundColor: '#fffdf9',
   },
-  inputField: {
+  textInput: {
     paddingHorizontal: 14,
     paddingVertical: 12,
     fontSize: 14,
-    color: '#f8f5ee',
+    color: '#0d1f3c',
     fontWeight: '500',
   },
-  passwordInputRow: {
+  passwordRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  eyeButton: {
+  eyeIconButton: {
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
 
-  // ── SELECT BUTTON & DROPDOWN ──
-  selectButton: {
+  // ── PICKER TRIGGER BUTTON ──
+  pickerTriggerButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 14,
     paddingVertical: 13,
   },
-  selectButtonText: {
+  pickerTriggerText: {
     fontSize: 13.5,
-    color: '#f8f5ee',
+    color: '#0d1f3c',
     fontWeight: '500',
     flex: 1,
     marginRight: 8,
   },
-  pickerDropdownContainer: {
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(200, 146, 42, 0.2)',
-    backgroundColor: 'rgba(5, 12, 25, 0.95)',
-  },
-  pickerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 11,
-    paddingHorizontal: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.04)',
-  },
-  pickerRowActive: {
-    backgroundColor: 'rgba(200, 146, 42, 0.15)',
-  },
-  pickerRowText: {
-    fontSize: 12.5,
-    color: 'rgba(240, 236, 228, 0.75)',
-    flex: 1,
-    marginRight: 8,
-  },
-  pickerRowTextActive: {
-    color: '#dfa943',
-    fontWeight: '700',
-  },
 
-  // ── DUAL SELECTOR GRID (YEAR / SEMESTER) ──
+  // ── DUAL YEAR / SEMESTER SELECTORS ──
   dualSelectorRow: {
     flexDirection: 'row',
     gap: 12,
     marginBottom: 16,
   },
-  dualSelectorCol: {
+  dualCol: {
     flex: 1,
   },
-  miniSectionLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: 'rgba(166, 183, 212, 0.7)',
-    letterSpacing: 0.8,
+  miniColLabel: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#526079',
+    letterSpacing: 0.5,
     marginBottom: 8,
   },
-  chipsGrid: {
+  chipsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
   },
-  chipBase: {
+  yearChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: 'rgba(7, 16, 32, 0.75)',
+    backgroundColor: '#faf8f5',
     borderWidth: 1,
-    borderColor: 'rgba(200, 146, 42, 0.2)',
+    borderColor: '#e4dcce',
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 40,
-    overflow: 'hidden',
   },
-  chipSmall: {
-    minWidth: 32,
+  semChip: {
     paddingHorizontal: 8,
     paddingVertical: 6,
-  },
-  chipActive: {
-    borderColor: '#dfa943',
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-  },
-  chipActiveGradient: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: 9,
+    backgroundColor: '#faf8f5',
+    borderWidth: 1,
+    borderColor: '#e4dcce',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
-    height: '100%',
+    minWidth: 30,
   },
-  chipLabel: {
+  yearChipActive: {
+    backgroundColor: '#0d1f3c',
+    borderColor: '#0d1f3c',
+  },
+  yearChipText: {
     fontSize: 12,
     fontWeight: '700',
-    color: 'rgba(240, 236, 228, 0.7)',
+    color: '#526079',
   },
-  chipLabelSmall: {
+  semChipText: {
     fontSize: 11.5,
+    fontWeight: '700',
+    color: '#526079',
   },
-  chipLabelActive: {
-    color: '#091529',
+  yearChipTextActive: {
+    color: '#ffffff',
     fontWeight: '800',
   },
 
-  // ── SECTION DIVIDER ──
-  sectionRuleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 14,
-    gap: 10,
-  },
-  sectionRuleLine: {
-    flex: 1,
+  fieldDivider: {
     height: 1,
-  },
-  sectionRuleText: {
-    fontSize: 9.5,
-    fontWeight: '800',
-    color: '#dfa943',
-    letterSpacing: 1.8,
+    backgroundColor: '#eee8dd',
+    marginVertical: 12,
   },
 
-  // ── PRIMARY BUTTON ──
-  buttonWrap: {
-    marginTop: 8,
-    marginBottom: 4,
-    shadowColor: '#dfa943',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 8,
-  },
-  primaryButton: {
-    borderRadius: 14,
+  // ── PRIMARY PILL BUTTON ──
+  pillButton: {
+    backgroundColor: '#0d1f3c', // Deep institutional navy
+    borderRadius: 9999,
     paddingVertical: 14,
-    paddingHorizontal: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
-    overflow: 'hidden',
+    marginTop: 10,
+    marginBottom: 6,
+    shadowColor: '#0d1f3c',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  buttonSpecularLine: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+  pillButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  buttonInner: {
+  pillButtonText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 0.3,
+  },
+
+  // ── MINIMAL BOTTOM SWITCH ROW ──
+  switchFooterRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    marginTop: 16,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f2ece2',
   },
-  primaryButtonText: {
-    fontSize: 14.5,
+  switchFooterText: {
+    fontSize: 13,
+    color: '#6b7c96',
+  },
+  switchFooterAction: {
+    fontSize: 13,
     fontWeight: '800',
-    color: '#091529',
-    letterSpacing: 0.4,
+    color: '#c8922a', // Brass-gold action link
   },
-  buttonArrowCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#091529',
+
+  securityFootnote: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
+    marginTop: 16,
+    paddingHorizontal: 12,
+  },
+  securityFootnoteText: {
+    fontSize: 10.5,
+    color: '#8a99ad',
+    textAlign: 'center',
   },
 
   // ── ALERT BANNER ──
@@ -2190,49 +1548,85 @@ const st = StyleSheet.create({
     marginBottom: 16,
     alignItems: 'flex-start',
   },
-  alertIconCol: {
+  alertIconBox: {
     marginRight: 10,
     marginTop: 1,
   },
-  alertContentCol: {
+  alertContentBox: {
     flex: 1,
   },
-  alertTitle: {
+  alertTitleText: {
     fontSize: 12,
     fontWeight: '800',
-    letterSpacing: 0.3,
     marginBottom: 2,
   },
-  alertMessage: {
-    fontSize: 11.5,
+  alertMessageText: {
+    fontSize: 12,
     lineHeight: 16,
-    fontWeight: '500',
   },
 
-  // ── FOOTER ──
-  footerArea: {
-    marginTop: 22,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(200, 146, 42, 0.15)',
-    paddingTop: 16,
+  // ── MODAL PICKER (Bug Fix) ──
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(9, 21, 41, 0.45)',
+    justifyContent: 'flex-end',
   },
-  footerShieldRow: {
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: 460,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 6,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0ece4',
   },
-  footerSecurityText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#dfa943',
-    letterSpacing: 0.3,
+  modalTitleText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0d1f3c',
   },
-  footerCopyright: {
-    fontSize: 10,
-    color: 'rgba(166, 183, 212, 0.45)',
-    textAlign: 'center',
-    letterSpacing: 0.2,
+  modalCloseBtn: {
+    padding: 4,
+  },
+  modalListScroll: {
+    maxHeight: 360,
+    paddingHorizontal: 12,
+  },
+  modalListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f8f5ee',
+    borderRadius: 12,
+  },
+  modalListItemActive: {
+    backgroundColor: '#fbf8f0',
+  },
+  modalListItemText: {
+    fontSize: 14,
+    color: '#2a3b53',
+    flex: 1,
+    marginRight: 8,
+    fontWeight: '500',
+  },
+  modalListItemTextActive: {
+    color: '#c8922a',
+    fontWeight: '800',
   },
 });
