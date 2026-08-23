@@ -34,14 +34,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (storedToken) {
           setToken(storedToken);
           const response = await api.get('/auth/me');
-          setUser(response.data.data);
+          setUser(response?.data?.data || null);
         } else {
           setUser(null);
           setToken(null);
         }
       } catch (err) {
         console.error('Error restoring auth session:', err);
-        await removeToken();
+        try {
+          await removeToken();
+        } catch (_) {}
         setToken(null);
         setUser(null);
       } finally {
@@ -49,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    initAuth();
+    initAuth().catch(() => setLoading(false));
   }, []);
 
   const setSession = async (newToken: string, newUser: UserWithProfile) => {

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../hooks/useAuth';
 import { colors } from '../../constants/colors';
 import { Button } from '../../components/ui/Button';
@@ -37,7 +38,7 @@ export default function PendingScreen() {
         <View style={styles.card}>
           <View style={styles.iconContainer}>
             <View style={styles.iconRing}>
-              <Text style={styles.icon}>⏳</Text>
+              <Ionicons name="time-outline" size={34} color={colors.gold} />
             </View>
           </View>
 
@@ -118,9 +119,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(200, 146, 42, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  icon: {
-    fontSize: 32,
   },
   collegeTag: {
     fontSize: 10,

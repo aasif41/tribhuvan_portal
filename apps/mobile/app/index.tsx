@@ -20,3 +20,5 @@ export default function Index() {
   const routes: Record<string, string> = { STUDENT: '/(student)', TEACHER: '/(teacher)', ADMIN: '/(admin)' };
   return <Redirect href={(routes[user.role] || '/(auth)/login') as any} />;
 }
+
+

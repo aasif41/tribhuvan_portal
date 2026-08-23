@@ -4,49 +4,51 @@ import { colors } from '../../constants/colors';
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'gold' | 'outline' | 'goldOutline';
+  variant?: 'primary' | 'navy' | 'gold' | 'outline' | 'goldOutline';
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
 
-export function Button({ title, onPress, variant = 'gold', loading = false, disabled = false, style, textStyle }: ButtonProps) {
+export function Button({ title, onPress, variant = 'navy', loading = false, disabled = false, style, textStyle }: ButtonProps) {
   const getBtnStyle = (): ViewStyle => {
     switch (variant) {
+      case 'navy':
+      case 'primary':
+        return styles.navy;
       case 'gold':
         return styles.gold;
-      case 'primary':
-        return styles.primary;
       case 'outline':
         return styles.outline;
       case 'goldOutline':
         return styles.goldOutline;
       default:
-        return styles.gold;
+        return styles.navy;
     }
   };
 
   const getTextStyle = (): TextStyle => {
     switch (variant) {
+      case 'navy':
+      case 'primary':
+        return styles.navyText;
       case 'gold':
         return styles.goldText;
-      case 'primary':
-        return styles.whiteText;
       case 'outline':
         return styles.outlineText;
       case 'goldOutline':
         return styles.goldOutlineText;
       default:
-        return styles.goldText;
+        return styles.navyText;
     }
   };
 
   const getSpinnerColor = (): string => {
-    if (variant === 'gold') return colors.navyDark;
+    if (variant === 'gold') return colors.webNavy;
     if (variant === 'goldOutline') return colors.gold;
-    if (variant === 'outline') return colors.white;
-    return colors.white;
+    if (variant === 'outline') return colors.webNavy;
+    return '#f0ece4';
   };
 
   return (
@@ -69,21 +71,21 @@ const styles = StyleSheet.create({
   base: {
     paddingVertical: 14,
     paddingHorizontal: 24,
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
   } as ViewStyle,
+  navy: {
+    backgroundColor: '#0d1f3c',
+  } as ViewStyle,
   gold: {
     backgroundColor: colors.gold,
-  } as ViewStyle,
-  primary: {
-    backgroundColor: colors.navyLight,
   } as ViewStyle,
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: '#d4c9b0',
   } as ViewStyle,
   goldOutline: {
     backgroundColor: 'transparent',
@@ -93,25 +95,30 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.5,
   } as ViewStyle,
-  goldText: {
-    color: colors.navyDark,
-    fontSize: 15,
+  navyText: {
+    color: '#f0ece4',
+    fontSize: 13,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
   } as TextStyle,
-  whiteText: {
-    color: colors.white,
-    fontSize: 15,
-    fontWeight: '600',
+  goldText: {
+    color: '#0d1f3c',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
   } as TextStyle,
   outlineText: {
-    color: colors.white,
-    fontSize: 14,
+    color: '#0d1f3c',
+    fontSize: 13,
     fontWeight: '600',
+    letterSpacing: 0.5,
   } as TextStyle,
   goldOutlineText: {
     color: colors.gold,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
+    letterSpacing: 0.5,
   } as TextStyle,
 });

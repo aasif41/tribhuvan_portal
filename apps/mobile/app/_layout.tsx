@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import { useEffect } from 'react';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -11,10 +12,12 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (loading) return;
+    if (!segments || (segments as any[]).length === 0) return;
 
     const timer = setTimeout(() => {
       try {
-        const inAuthGroup = segments[0] === '(auth)';
+        const currentSegment = segments[0];
+        const inAuthGroup = currentSegment === '(auth)';
 
         if (!user && !inAuthGroup) {
           router.replace('/(auth)/login' as any);
@@ -24,7 +27,7 @@ function RootLayoutNav() {
               router.replace('/(auth)/pending' as any);
             }
           } else if (user.status === 'APPROVED') {
-            if (inAuthGroup) {
+            if (inAuthGroup || !currentSegment) {
               const roleRoutes: Record<string, string> = {
                 STUDENT: '/(student)',
                 TEACHER: '/(teacher)',
@@ -37,7 +40,7 @@ function RootLayoutNav() {
       } catch (e) {
         console.error('Initial navigation error:', e);
       }
-    }, 10);
+    }, 50);
 
     return () => clearTimeout(timer);
   }, [user, loading, segments]);
